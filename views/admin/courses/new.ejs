@@ -1,0 +1,33 @@
+<%- include('../../partials/header'); %>
+<%- include('../../partials/navbar'); %>
+
+<div class="container mt-4">
+    <h2 class="mb-4">Register Course</h2>
+
+    <form action="/courses/save" method="POST">
+        <div class="mb-3">
+            <label for="title" class="form-label">Course title</label>
+            <input type="text" class="form-control" id="title" name="title" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <input type="text" class="form-control" id="description" name="description" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="price" class="form-label">Price</label>
+            <input type="number" class="form-control" id="price" name="price" step="0.01" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="status" class="form-label">Status</label>
+            <input type="checkbox" class="form-check-input" id="status" name="status">
+            <label for="status" class="form-check-label">Active</label>
+        </div>
+
+        <button type="submit" class="btn btn-dark">Register</button>
+    </form>
+</div>
+
+<%- include('../../partials/footer'); %>
