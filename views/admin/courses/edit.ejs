@@ -4,25 +4,31 @@
 <div class="container mt-4">
     <h2 class="mb-4">Edit Course</h2>
 
-    <form action="/courses/save" method="POST">
+    <form action="/courses/update" method="POST">
+        <input type="hidden" name="id" value="<%= course.id %>">
         <div class="mb-3">
             <label for="name" class="form-label">Course name</label>
-            <input type="text" class="form-control" id="name" name="name" required>
+            <input type="text" class="form-control" id="name" name="name" value="<%= course.name %>" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="workload" class="form-label">Workload (hours)</label>
+            <input type="number" class="form-control" id="workload" name="workload" value="<%= course.workload %>" required>
         </div>
 
         <div class="mb-3">
             <label for="description" class="form-label">Description</label>
-            <input type="text" class="form-control" id="description" name="description" value="<%= courses.description %>" required>
+            <input type="text" class="form-control" id="description" name="description" value="<%= course.description %>" required>
         </div>
 
         <div class="mb-3">
             <label for="price" class="form-label">Price</label>
-            <input type="number" class="form-control" id="price" name="price" step="0.01" value="<%= courses.price %>" required>
+            <input type="number" class="form-control" id="price" name="price" step="0.01" value="<%= course.price %>" required>
         </div>
 
         <div class="mb-3">
             <label for="status" class="form-label">Status</label>
-            <input type="checkbox" class="form-check-input" id="status" name="status" <%= courses.status ? "checked" : "" %>>
+            <input type="checkbox" class="form-check-input" id="status" name="status" <%= course.status ? "checked" : "" %>>
             <label for="status" class="form-check-label">Active</label>
         </div>
 

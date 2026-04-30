@@ -4,8 +4,10 @@ const app = express();
 const connection = require("./database/database");
 
 const courseController = require("./courses/CourseController");
+const userController = require("./users/UserController");
 
 const Course = require("./courses/Course");
+const User = require("./users/User");
 
 //view engine
 app.set("view engine", "ejs");
@@ -33,6 +35,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/", courseController);
+app.use("/", userController);
 
 app.listen(8080, (req, res) => {
   console.log("running");

@@ -19,14 +19,13 @@
             <% courses.forEach((course) => {%>
                 <tr>
                     <td><%= course.id %></td>
-                    <td><%= course.title %></td>
+                    <td><%= course.name %></td>
                     <td><%= course.description %></td>
+                    <td><%= course.workload %> h</td>
                     <td><%= course.price %></td>
                     <td><%= course.status ? "Active" : "Inactive" %></td>
                     <td>
-                        <form //add style = "display: inline;">
-                            <button class="btn btn-warning">Edit</button>
-                        </form>
+                        <button class="btn btn-warning" onclick="window.location.href='/admin/courses/edit/<%= course.id %>'">Edit</button>
                         <form method="post" action="/courses/delete" style="display: inline;" onsubmit="confirmDelete(event, this)"> 
                             <input type="hidden" name="id" value="<%= course.id %>">
                              <button class="btn btn-danger">Delete</button>

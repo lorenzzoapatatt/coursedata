@@ -6,8 +6,13 @@
 
     <form action="/courses/save" method="POST">
         <div class="mb-3">
-            <label for="title" class="form-label">Course title</label>
-            <input type="text" class="form-control" id="title" name="title" required>
+            <label for="name" class="form-label">Course name</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="workload" class="form-label">Workload (hours)</label>
+            <input type="number" class="form-control" id="workload" name="workload" required>
         </div>
 
         <div class="mb-3">

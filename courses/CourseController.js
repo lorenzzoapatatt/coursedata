@@ -22,18 +22,28 @@ router.post("/courses/save", (req, res) => {
       price: price,
       status: status,
       slug: slugify(name),
-    }).then(() => {
-      res.redirect("/admin/courses");
-    });
+    })
+      .then(() => {
+        res.redirect("/admin/courses");
+      })
+      .catch((error) => {
+        console.error(error);
+        res.redirect("/admin/courses/new");
+      });
   } else {
     res.redirect("/admin/courses/new");
   }
 });
 
 router.get("/admin/courses", (req, res) => {
-  Course.findAll().then((courses) => {
-    res.render("admin/courses/index", { courses: courses });
-  });
+  Course.findAll()
+    .then((courses) => {
+      res.render("admin/courses/index", { courses: courses });
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).send("Erro ao buscar cursos");
+    });
 });
 
 router.post("/courses/delete", (req, res) => {
@@ -62,20 +72,55 @@ router.get("/admin/courses/edit/:id", (req, res) => {
 
   //checks if it's a number
   if (isNaN(id)) {
-    res.redirect("/admin/courses");
+    return res.redirect("/admin/courses");
   }
 
   Course.findByPk(id)
-    .then((courses) => {
-      if (courses != undefined) {
-        res.render("admin/courses/edit", { courses: courses });
+    .then((course) => {
+      if (course != undefined) {
+        res.render("admin/courses/edit", { course: course });
       } else {
         res.redirect("/admin/courses");
       }
     })
     .catch((error) => {
+      console.error(error);
       res.redirect("/admin/courses");
     });
+});
+
+router.post("/courses/update", (req, res) => {
+  var id = req.body.id;
+  var name = req.body.name;
+  var workload = req.body.workload;
+  var description = req.body.description;
+  var price = req.body.price;
+  var status = req.body.status === "on" ? true : false;
+
+  if (id != undefined && name != undefined && workload != undefined) {
+    Course.update(
+      {
+        name: name,
+        workload: workload,
+        description: description,
+        price: price,
+        status: status,
+        slug: slugify(name),
+      },
+      {
+        where: { id: id },
+      }
+    )
+      .then(() => {
+        res.redirect("/admin/courses");
+      })
+      .catch((error) => {
+        console.error(error);
+        res.redirect("/admin/courses/edit/" + id);
+      });
+  } else {
+    res.redirect("/admin/courses/edit/" + id);
+  }
 });
 
 module.exports = router;
