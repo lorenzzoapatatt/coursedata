@@ -1,24 +1,17 @@
 const { DataTypes } = require("sequelize");
 const connection = require("../database/database");
 
-const User = connection.define("users", {
-  enterprise_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  profile_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
+const Enterprise = connection.define("enterprises", {
   name: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  email: {
+  cnpj: {
     type: DataTypes.STRING,
     allowNull: false,
+    unique: true,
   },
-  password: {
+  email: {
     type: DataTypes.STRING,
     allowNull: false,
   },
@@ -43,9 +36,7 @@ const User = connection.define("users", {
   },
 });
 
-//Botar Hash no password
-
 // Force creation on  the database
-//User.sync({ force: true });
+//Enterprise.sync({ force: true });
 
-module.exports = User;
+module.exports = Enterprise;
