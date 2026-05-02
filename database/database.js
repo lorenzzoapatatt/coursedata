@@ -1,9 +1,9 @@
 const Sequelize = require("sequelize");
 
-const connection = new Sequelize("coursedata", "root", "senac123", {
+const connection = new Sequelize("postgres", "postgres", "Naometoque1371626", {
   host: "localhost",
-  dialect: "mysql",
-  port: 3307,
+  dialect: "postgres",
+  port: 5432,
 });
 
 module.exports = connection;
