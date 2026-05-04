@@ -42,7 +42,4 @@ const Course = connection.define("courses", {
   },
 });
 
-// Force creation on  the database
-//Course.sync({ force: true });
-
 module.exports = Course;

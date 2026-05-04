@@ -43,9 +43,4 @@ const User = connection.define("users", {
   },
 });
 
-//Botar Hash no password
-
-// Force creation on  the database
-//User.sync({ force: true });
-
 module.exports = User;
