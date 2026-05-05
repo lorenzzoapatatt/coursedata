@@ -28,6 +28,10 @@ connection
   .authenticate()
   .then(() => {
     console.log("success");
+    return connection.sync({ alter: true });
+  })
+  .then(() => {
+    console.log("Database synced");
   })
   .catch((error) => {
     console.log(error);

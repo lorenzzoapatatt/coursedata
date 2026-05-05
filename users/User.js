@@ -1,5 +1,7 @@
 const { DataTypes } = require("sequelize");
 const connection = require("../database/database");
+const Enterprise = require("../enterprises/Enterprise");
+const Profile = require("../profiles/Profile");
 
 const User = connection.define("users", {
   enterprise_id: {
@@ -42,5 +44,8 @@ const User = connection.define("users", {
     defaultValue: DataTypes.NOW,
   },
 });
+
+User.belongsTo(Enterprise, { foreignKey: "enterprise_id" });
+User.belongsTo(Profile, { foreignKey: "profile_id" });
 
 module.exports = User;
