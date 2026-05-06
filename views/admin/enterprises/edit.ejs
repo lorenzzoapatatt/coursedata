@@ -1,0 +1,39 @@
+<%- include('../../partials/header'); %>
+<%- include('../../partials/navbar'); %>
+
+<div class="container mt-4">
+    <h2 class="mb-4">Editar Empresa</h2>
+
+    <form action="/admin/enterprises/update" method="POST">
+        <input type="hidden" name="id" value="<%= enterprise.id %>">
+
+        <div class="mb-3">
+            <label for="name" class="form-label">Nome</label>
+            <input type="text" class="form-control" id="name" name="name" value="<%= enterprise.name %>" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="cnpj" class="form-label">CNPJ</label>
+            <input type="text" class="form-control" id="cnpj" name="cnpj" value="<%= enterprise.cnpj %>" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" value="<%= enterprise.email %>" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="phone" class="form-label">Telefone</label>
+            <input type="text" class="form-control" id="phone" name="phone" value="<%= enterprise.phone %>" required>
+        </div>
+
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="is_active" name="is_active" <%= enterprise.is_active ? 'checked' : '' %>>
+            <label class="form-check-label" for="is_active">Ativa</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Atualizar</button>
+    </form>
+</div>
+
+<%- include('../../partials/footer'); %>

@@ -5,6 +5,7 @@ const connection = require("./database/database");
 
 const courseController = require("./courses/CourseController");
 const userController = require("./users/UserController");
+const enterpriseController = require("./enterprises/EnterpriseContoller");
 
 const Course = require("./courses/Course");
 const User = require("./users/User");
@@ -43,6 +44,7 @@ app.get("/", (req, res) => {
 
 app.use("/", courseController);
 app.use("/", userController);
+app.use("/", enterpriseController);
 
 app.listen(8080, (req, res) => {
   console.log("running");

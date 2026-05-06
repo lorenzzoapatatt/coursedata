@@ -1,0 +1,52 @@
+<%- include('../../partials/header'); %>
+<%- include('../../partials/navbar'); %>
+
+<div class="container">
+    <hr>
+    <h2>Empresas</h2>
+    <a class="btn btn-success mb-3" href="/admin/enterprises/new">Criar Empresa</a>
+    <hr>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>CNPJ</th>
+                <th>Email</th>
+                <th>Telefone</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% enterprises.forEach((enterprise) => { %>
+                <tr>
+                    <td><%= enterprise.id %></td>
+                    <td><%= enterprise.name %></td>
+                    <td><%= enterprise.cnpj %></td>
+                    <td><%= enterprise.email %></td>
+                    <td><%= enterprise.phone %></td>
+                    <td><%= enterprise.is_active ? 'Ativa' : 'Inativa' %></td>
+                    <td>
+                        <a class="btn btn-primary" href="/admin/enterprises/edit/<%= enterprise.id %>">Editar</a>
+                        <form method="post" action="/admin/enterprises/delete" style="display:inline;" onsubmit="confirmDelete(event, this)">
+                            <input type="hidden" name="id" value="<%= enterprise.id %>">
+                            <button type="submit" class="btn btn-danger">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+
+<%- include('../../partials/footer'); %>
+
+<script>
+    function confirmDelete(event, form) {
+        event.preventDefault();
+        if (confirm('Deseja realmente excluir esta empresa?')) {
+            form.submit();
+        }
+    }
+</script>

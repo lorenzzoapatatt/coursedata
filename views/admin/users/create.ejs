@@ -8,9 +8,28 @@
             <h2>Criação de usuario</h2>
         </div>
         <div class="card-body">
-            <form action="/users/create" method="post">
-                <input name="email" type="email" class="form-control mb-3" placeholder="Email">
-                <input name="password" type="password" class="form-control mb-3" placeholder="Password">
+            <form action="/admin/users/create" method="post">
+                <input name="name" type="text" class="form-control mb-3" placeholder="Nome" required>
+                <input name="email" type="email" class="form-control mb-3" placeholder="Email" required>
+                <input name="password" type="password" class="form-control mb-3" placeholder="Senha" required>
+                <input name="phone" type="text" class="form-control mb-3" placeholder="Telefone" required>
+                
+                <label for="enterprise_id" class="form-label">Empresa</label>
+                <select name="enterprise_id" class="form-control mb-3" required>
+                    <option value="">Selecione uma empresa</option>
+                    <% enterprises.forEach((enterprise) => { %>
+                        <option value="<%= enterprise.id %>"><%= enterprise.name %></option>
+                    <% }); %>
+                </select>
+
+                <label for="profile_id" class="form-label">Perfil</label>
+                <select name="profile_id" class="form-control mb-3" required>
+                    <option value="">Selecione um perfil</option>
+                    <% profiles.forEach((profile) => { %>
+                        <option value="<%= profile.id %>"><%= profile.name %></option>
+                    <% }); %>
+                </select>
+                
                 <button type="submit" class="btn btn-primary">Create User</button>
             </form>
         </div>
