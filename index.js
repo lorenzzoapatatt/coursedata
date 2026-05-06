@@ -19,6 +19,8 @@ app.set("view engine", "ejs");
 app.use(
   session({
     secret: "Naometoque1371626",
+    resave: false,
+    saveUninitialized: false,
     cookie: { maxAge: 30000000 },
   }),
 );
@@ -57,12 +59,6 @@ app.get("/", (req, res) => {
 app.use("/", courseController);
 app.use("/", userController);
 app.use("/", enterpriseController);
-
-app.get("/", (req, res) => {
-  res.render("index");
-
-  //fazer algo aqui
-});
 
 app.listen(8080, (req, res) => {
   console.log("running");
