@@ -3,19 +3,18 @@
 
 <div class="container">
     <hr>
-    <h2>Empresas</h2>
-    <a class="btn btn-success mb-3" href="/admin/enterprises/new">Criar Empresa</a>
+    <h2>Enterprises</h2>
     <hr>
-    <table class="table table-bordered">
+    <table class="table">
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Nome</th>
+                <th>Name</th>
                 <th>CNPJ</th>
                 <th>Email</th>
-                <th>Telefone</th>
+                <th>Phone</th>
                 <th>Status</th>
-                <th>Ações</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -26,18 +25,19 @@
                     <td><%= enterprise.cnpj %></td>
                     <td><%= enterprise.email %></td>
                     <td><%= enterprise.phone %></td>
-                    <td><%= enterprise.is_active ? 'Ativa' : 'Inativa' %></td>
+                    <td><%= enterprise.is_active ? 'Active' : 'Inactive' %></td>
                     <td>
-                        <a class="btn btn-primary" href="/admin/enterprises/edit/<%= enterprise.id %>">Editar</a>
+                        <a class="btn btn-primary" href="/admin/enterprises/edit/<%= enterprise.id %>">Edit</a>
                         <form method="post" action="/admin/enterprises/delete" style="display:inline;" onsubmit="confirmDelete(event, this)">
                             <input type="hidden" name="id" value="<%= enterprise.id %>">
-                            <button type="submit" class="btn btn-danger">Excluir</button>
+                            <button type="submit" class="btn btn-danger">Delete</button>
                         </form>
                     </td>
                 </tr>
             <% }) %>
         </tbody>
     </table>
+    <a class="btn btn-success" href="/admin/enterprises/new">Create Enterprise</a>
 </div>
 
 <%- include('../../partials/footer'); %>
@@ -45,7 +45,7 @@
 <script>
     function confirmDelete(event, form) {
         event.preventDefault();
-        if (confirm('Deseja realmente excluir esta empresa?')) {
+        if (confirm('Do you want to delete this enterprise?')) {
             form.submit();
         }
     }

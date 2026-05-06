@@ -6,7 +6,7 @@
 
     <form action="/admin/enterprises/save" method="POST">
         <div class="mb-3">
-            <label for="name" class="form-label">Nome</label>
+            <label for="name" class="form-label">Name</label>
             <input type="text" class="form-control" id="name" name="name" required>
         </div>
 
@@ -21,16 +21,17 @@
         </div>
 
         <div class="mb-3">
-            <label for="phone" class="form-label">Telefone</label>
+            <label for="phone" class="form-label">Phone</label>
             <input type="text" class="form-control" id="phone" name="phone" required>
         </div>
 
-        <div class="mb-3 form-check">
-            <input type="checkbox" class="form-check-input" id="is_active" name="is_active" checked>
-            <label class="form-check-label" for="is_active">Ativa</label>
+        <div class="mb-3">
+            <label for="status" class="form-label">Status</label>
+            <input type="checkbox" class="form-check-input" id="is_active" name="is_active">
+            <label for="status" class="form-check-label">Active</label>
         </div>
 
-        <button type="submit" class="btn btn-primary">Cadastrar</button>
+        <button type="submit" class="btn btn-dark">Register</button>
     </form>
 </div>
 
