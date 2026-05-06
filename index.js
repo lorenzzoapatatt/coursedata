@@ -34,6 +34,12 @@ app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+// Make session available in views
+app.use((req, res, next) => {
+  res.locals.user = req.session.user;
+  next();
+});
+
 //User.sync({ force: true });
 //Course.sync({ force: true });
 
@@ -43,10 +49,27 @@ connection
   .authenticate()
   .then(() => {
     console.log("success");
-    return connection.sync({ alter: true });
+    return connection.sync({ force: true });
   })
   .then(() => {
     console.log("Database synced");
+    const Profile = require("./profiles/Profile");
+    Profile.findOrCreate({
+      where: { name: "admin" },
+      defaults: { description: "Administrador" },
+    });
+    Profile.findOrCreate({
+      where: { name: "professor" },
+      defaults: { description: "Professor" },
+    });
+    Profile.findOrCreate({
+      where: { name: "enterprise" },
+      defaults: { description: "Empresa" },
+    });
+    Profile.findOrCreate({
+      where: { name: "user" },
+      defaults: { description: "Usuário" },
+    });
   })
   .catch((error) => {
     console.log(error);

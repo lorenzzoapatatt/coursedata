@@ -1,16 +1,17 @@
 const express = require("express");
 const router = express.Router();
 const Enterprise = require("./Enterprise");
+const enterpriseAuth = require("../middleware/enterpriseAuth");
 
-router.get("/admin/enterprises/new", (req, res) => {
+router.get("/admin/enterprises/new", enterpriseAuth, (req, res) => {
   res.render("admin/enterprises/new");
 });
 
-router.get("/admin/enterprises/create", (req, res) => {
+router.get("/admin/enterprises/create", enterpriseAuth, (req, res) => {
   res.redirect("/admin/enterprises/new");
 });
 
-router.get("/admin/enterprises", (req, res) => {
+router.get("/admin/enterprises", enterpriseAuth, (req, res) => {
   Enterprise.findAll()
     .then((enterprises) => {
       res.render("admin/enterprises/index", { enterprises: enterprises });
@@ -21,7 +22,7 @@ router.get("/admin/enterprises", (req, res) => {
     });
 });
 
-router.post("/admin/enterprises/save", (req, res) => {
+router.post("/admin/enterprises/save", enterpriseAuth, (req, res) => {
   let name = req.body.name;
   let cnpj = req.body.cnpj;
   let email = req.body.email;
@@ -55,7 +56,7 @@ router.post("/admin/enterprises/save", (req, res) => {
     });
 });
 
-router.get("/admin/enterprises/edit/:id", (req, res) => {
+router.get("/admin/enterprises/edit/:id", enterpriseAuth, (req, res) => {
   let id = req.params.id;
 
   if (isNaN(id)) {
@@ -76,7 +77,7 @@ router.get("/admin/enterprises/edit/:id", (req, res) => {
     });
 });
 
-router.post("/admin/enterprises/update", (req, res) => {
+router.post("/admin/enterprises/update", enterpriseAuth, (req, res) => {
   let id = req.body.id;
   let name = req.body.name;
   let cnpj = req.body.cnpj;

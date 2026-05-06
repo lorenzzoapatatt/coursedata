@@ -30,16 +30,6 @@ const Course = connection.define("courses", {
     type: DataTypes.BOOLEAN,
     allowNull: false,
   },
-  created_at: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW,
-  },
-  updated_at: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW,
-  },
 });
 
 module.exports = Course;

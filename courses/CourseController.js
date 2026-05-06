@@ -2,12 +2,13 @@ const express = require("express");
 const router = express.Router();
 const Course = require("./Course");
 const slugify = require("slugify");
+const courseAuth = require("../middleware/courseAuth");
 
-router.get("/admin/courses/new", (req, res) => {
+router.get("/admin/courses/new", courseAuth, (req, res) => {
   res.render("admin/courses/new");
 });
 
-router.post("/courses/save", (req, res) => {
+router.post("/courses/save", courseAuth, (req, res) => {
   let name = req.body.name;
   let workload = req.body.workload;
   let description = req.body.description;
@@ -35,7 +36,7 @@ router.post("/courses/save", (req, res) => {
   }
 });
 
-router.get("/admin/courses", (req, res) => {
+router.get("/admin/courses", courseAuth, (req, res) => {
   Course.findAll()
     .then((courses) => {
       res.render("admin/courses/index", { courses: courses });
@@ -46,7 +47,7 @@ router.get("/admin/courses", (req, res) => {
     });
 });
 
-router.post("/courses/delete", (req, res) => {
+router.post("/courses/delete", courseAuth, (req, res) => {
   var id = req.body.id;
   if (id != undefined) {
     if (!isNaN(id)) {
@@ -67,7 +68,7 @@ router.post("/courses/delete", (req, res) => {
   }
 });
 
-router.get("/admin/courses/edit/:id", (req, res) => {
+router.get("/admin/courses/edit/:id", courseAuth, (req, res) => {
   var id = req.params.id;
 
   //checks if it's a number
@@ -89,7 +90,7 @@ router.get("/admin/courses/edit/:id", (req, res) => {
     });
 });
 
-router.post("/courses/update", (req, res) => {
+router.post("/courses/update", courseAuth, (req, res) => {
   var id = req.body.id;
   var name = req.body.name;
   var workload = req.body.workload;
@@ -109,7 +110,7 @@ router.post("/courses/update", (req, res) => {
       },
       {
         where: { id: id },
-      }
+      },
     )
       .then(() => {
         res.redirect("/admin/courses");
