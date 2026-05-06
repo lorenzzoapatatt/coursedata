@@ -5,10 +5,10 @@
     <hr>
     <div class="card mt-4">
         <div class="card-header">
-            <h2>Criação de usuario</h2>
+            <h2>Login user</h2>
         </div>
         <div class="card-body">
-            <form action="/users/create" method="post">
+            <form action="/admin/users/create" method="post">
                 <input name="name" type="text" class="form-control mb-3" placeholder="Nome" required>
                 <input name="email" type="email" class="form-control mb-3" placeholder="Email" required>
                 <input name="password" type="password" class="form-control mb-3" placeholder="Senha" required>
@@ -30,7 +30,7 @@
                     <% }); %>
                 </select>
                 
-                <button type="submit" class="btn btn-primary">Create User</button>
+                <button type="submit" class="btn btn-primary">Login User</button>
             </form>
         </div>
     </div>

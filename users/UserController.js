@@ -25,7 +25,7 @@ router.get("/admin/users/create", (req, res) => {
     });
 });
 
-router.post("/admin/users/create", (req, res) => {
+router.post("/users/create", (req, res) => {
   let name = req.body.name;
   let email = req.body.email;
   let password = req.body.password;
@@ -62,6 +62,20 @@ router.post("/admin/users/create", (req, res) => {
       console.log(error);
       res.status(500).send("Erro ao processar solicitação");
     });
+});
+
+router.get("/login", (req, res) => {
+  res.render("admin/users/login");
+});
+
+router.post("/auth", (req, res) => {
+  let email = req.body.email;
+  let password = req.body.password;
+
+  User.findOne({ where: { email: email } }).then((user) => {
+    if (user != undefined) {
+    }
+  });
 });
 
 module.exports = router;

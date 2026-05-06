@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
+const session = require("express-session");
 const connection = require("./database/database");
 
 const courseController = require("./courses/CourseController");
@@ -9,9 +10,20 @@ const enterpriseController = require("./enterprises/EnterpriseContoller");
 
 const Course = require("./courses/Course");
 const User = require("./users/User");
+const Enterprise = require("./enterprises/Enterprise");
 
 //view engine
 app.set("view engine", "ejs");
+
+//Sessions
+app.use(
+  session({
+    secret: "Naometoque1371626",
+    cookie: { maxAge: 30000000 },
+  }),
+);
+
+//Redis
 
 //static files
 app.use(express.static("public"));
@@ -45,6 +57,12 @@ app.get("/", (req, res) => {
 app.use("/", courseController);
 app.use("/", userController);
 app.use("/", enterpriseController);
+
+app.get("/", (req, res) => {
+  res.render("index");
+
+  //fazer algo aqui
+});
 
 app.listen(8080, (req, res) => {
   console.log("running");
