@@ -1,30 +1,38 @@
 const { DataTypes } = require("sequelize");
 const connection = require("../database/database");
 
-const Enterprise = connection.define("enterprises", {
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
+const Enterprise = connection.define(
+  "enterprises",
+  {
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    cnpj: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
   },
-  cnpj: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
+  {
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
   },
-  email: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  phone: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  is_active: {
-    type: DataTypes.BOOLEAN,
-    allowNull: false,
-    defaultValue: true,
-  },
-});
+);
 
 // Force creation on  the database
 //Enterprise.sync({ force: true });

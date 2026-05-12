@@ -3,37 +3,45 @@ const connection = require("../database/database");
 const Enterprise = require("../enterprises/Enterprise");
 const Profile = require("../profiles/Profile");
 
-const User = connection.define("users", {
-  enterprise_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
+const User = connection.define(
+  "users",
+  {
+    enterprise_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    profile_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
   },
-  profile_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
+  {
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
   },
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  email: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  phone: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  is_active: {
-    type: DataTypes.BOOLEAN,
-    allowNull: false,
-    defaultValue: true,
-  },
-});
+);
 
 User.belongsTo(Enterprise, { foreignKey: "enterprise_id" });
 User.belongsTo(Profile, { foreignKey: "profile_id" });

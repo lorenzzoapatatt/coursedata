@@ -83,7 +83,7 @@ router.post("/auth", (req, res) => {
         req.session.user = {
           id: user.id,
           email: user.email,
-          profile: user.Profile.name,
+          profile: user.profile.name,
         };
         res.redirect("/");
       } else {
