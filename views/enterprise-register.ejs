@@ -1,0 +1,22 @@
+<%- include('partials/header'); %>
+
+<div class="container">
+    <hr>
+    <div class="card mt-4">
+        <div class="card-header">
+            <h2>Cadastro de Empresa</h2>
+        </div>
+        <div class="card-body">
+            <form action="/enterprise/register" method="post">
+                <input name="name" type="text" class="form-control mb-3" placeholder="Nome da empresa" required>
+                <input name="cnpj" type="text" class="form-control mb-3" placeholder="CNPJ" required>
+                <input name="email" type="email" class="form-control mb-3" placeholder="Email" required>
+                <input name="password" type="password" class="form-control mb-3" placeholder="Senha" required>
+                <input name="phone" type="text" class="form-control mb-3" placeholder="Telefone" required>
+                <button type="submit" class="btn btn-primary">Cadastrar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer'); %>

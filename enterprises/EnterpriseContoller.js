@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const bcrypt = require("bcryptjs");
 const Enterprise = require("./Enterprise");
 const enterpriseAuth = require("../middleware/enterpriseAuth");
 
@@ -26,16 +27,25 @@ router.post("/admin/enterprises/save", enterpriseAuth, (req, res) => {
   let name = req.body.name;
   let cnpj = req.body.cnpj;
   let email = req.body.email;
+  let password = req.body.password;
   let phone = req.body.phone;
   let is_active = req.body.is_active === "on" ? true : false;
+
+  if (!password) {
+    return res.status(400).send("Senha obrigatória");
+  }
 
   Enterprise.findOne({ where: { email: email } })
     .then((enterprise) => {
       if (enterprise == undefined) {
+        let salt = bcrypt.genSaltSync(10);
+        let hash = bcrypt.hashSync(password, salt);
+
         Enterprise.create({
           name: name,
           cnpj: cnpj,
           email: email,
+          password: hash,
           phone: phone,
           is_active: is_active,
         })
@@ -82,22 +92,27 @@ router.post("/admin/enterprises/update", enterpriseAuth, (req, res) => {
   let name = req.body.name;
   let cnpj = req.body.cnpj;
   let email = req.body.email;
+  let password = req.body.password;
   let phone = req.body.phone;
   let is_active = req.body.is_active === "on" ? true : false;
 
   if (id != undefined && !isNaN(id)) {
-    Enterprise.update(
-      {
-        name: name,
-        cnpj: cnpj,
-        email: email,
-        phone: phone,
-        is_active: is_active,
-      },
-      {
-        where: { id: id },
-      },
-    )
+    const updatedData = {
+      name: name,
+      cnpj: cnpj,
+      email: email,
+      phone: phone,
+      is_active: is_active,
+    };
+
+    if (password) {
+      let salt = bcrypt.genSaltSync(10);
+      updatedData.password = bcrypt.hashSync(password, salt);
+    }
+
+    Enterprise.update(updatedData, {
+      where: { id: id },
+    })
       .then(() => {
         res.redirect("/admin/enterprises");
       })
@@ -127,6 +142,80 @@ router.post("/admin/enterprises/delete", (req, res) => {
   } else {
     res.redirect("/admin/enterprises");
   }
+});
+
+router.get("/enterprise/login", (req, res) => {
+  res.render("enterprise-login");
+});
+
+router.post("/enterprise/auth", (req, res) => {
+  let email = req.body.email;
+  let password = req.body.password;
+
+  Enterprise.findOne({ where: { email: email } }).then((enterprise) => {
+    if (enterprise != undefined) {
+      let correct = bcrypt.compareSync(password, enterprise.password);
+
+      if (correct && enterprise.is_active) {
+        req.session.user = {
+          id: enterprise.id,
+          email: enterprise.email,
+          profile: "enterprise",
+        };
+        res.redirect("/");
+      } else {
+        res.redirect("/enterprise/login");
+      }
+    } else {
+      res.redirect("/enterprise/login");
+    }
+  });
+});
+
+router.get("/enterprise/register", (req, res) => {
+  res.render("enterprise-register");
+});
+
+router.post("/enterprise/register", (req, res) => {
+  let name = req.body.name;
+  let cnpj = req.body.cnpj;
+  let email = req.body.email;
+  let password = req.body.password;
+  let phone = req.body.phone;
+
+  if (!password) {
+    return res.status(400).send("Senha obrigatória");
+  }
+
+  Enterprise.findOne({ where: { email: email } }).then((enterprise) => {
+    if (enterprise) {
+      return res.status(400).send("Email já registrado");
+    }
+
+    let salt = bcrypt.genSaltSync(10);
+    let hash = bcrypt.hashSync(password, salt);
+
+    Enterprise.create({
+      name: name,
+      cnpj: cnpj,
+      email: email,
+      password: hash,
+      phone: phone,
+      is_active: true,
+    })
+      .then(() => {
+        res.redirect("/enterprise/login");
+      })
+      .catch((error) => {
+        console.log(error);
+        res.status(500).send("Erro ao criar empresa");
+      });
+  });
+});
+
+router.get("/enterprise/logout", (req, res) => {
+  req.session.user = undefined;
+  res.redirect("/");
 });
 
 module.exports = router;

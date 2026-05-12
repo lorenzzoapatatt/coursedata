@@ -1,6 +1,14 @@
 <%- include('./partials/header'); %>
 <%- include('./partials/navbar'); %>
 
+<% if (user.profile === 'admin') { %>
+    <div class="container mt-4">
+        <h2>Admin Dashboard</h2>
+        <p>Bem-vindo, <%= user.name %></p>
+    </div>
+    <%- include('./partials/sidebar'); %>
+<% } %>
+
 <body>
     <h1>Homepage Section</h1>
 </body>
