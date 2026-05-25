@@ -103,7 +103,14 @@ router.get("/logout", (req, res) => {
 router.get("/register", (req, res) => {
   Enterprise.findAll()
     .then((enterprises) => {
-      res.render("register", { enterprises });
+      Profile.findAll()
+        .then((profiles) => {
+          res.render("register", { enterprises, profiles });
+        })
+        .catch((error) => {
+          console.log(error);
+          res.status(500).send("Erro");
+        });
     })
     .catch((error) => {
       console.log(error);
@@ -117,6 +124,7 @@ router.post("/register", (req, res) => {
   let password = req.body.password;
   let phone = req.body.phone;
   let enterprise_id = req.body.enterprise_id;
+  let profile_id = req.body.profile_id;
 
   Profile.findOne({ where: { name: "user" } })
     .then((profile) => {
