@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const connection = require("../database/database");
 const Enterprise = require("../enterprises/Enterprise");
-const Profile = require("../profiles/Profile");
+const Role = require("../models/Role");
 
 const User = connection.define(
   "users",
@@ -10,9 +10,14 @@ const User = connection.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    profile_id: {
+    role_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      references: {
+        model: "roles",
+        key: "id",
+      },
+      comment: "Foreign key para a tabela de roles",
     },
     name: {
       type: DataTypes.STRING,
@@ -21,6 +26,7 @@ const User = connection.define(
     email: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true,
     },
     password: {
       type: DataTypes.STRING,
@@ -28,7 +34,7 @@ const User = connection.define(
     },
     phone: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     is_active: {
       type: DataTypes.BOOLEAN,
@@ -44,6 +50,6 @@ const User = connection.define(
 );
 
 User.belongsTo(Enterprise, { foreignKey: "enterprise_id" });
-User.belongsTo(Profile, { foreignKey: "profile_id" });
+User.belongsTo(Role, { foreignKey: "role_id" });
 
 module.exports = User;

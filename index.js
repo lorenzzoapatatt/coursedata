@@ -4,13 +4,22 @@ const app = express();
 const session = require("express-session");
 const connection = require("./database/database");
 
+// Controllers
+const authController = require("./auth/auth.controller");
 const courseController = require("./courses/CourseController");
-const userController = require("./users/UserController");
 const enterpriseController = require("./enterprises/EnterpriseContoller");
 
+// Middlewares
+const authenticate = require("./middlewares/authenticate");
+const authorize = require("./middlewares/authorize");
+
+// Models
 const Course = require("./courses/Course");
 const User = require("./users/User");
 const Enterprise = require("./enterprises/Enterprise");
+const Role = require("./models/Role");
+const Permission = require("./models/Permission");
+const RolePermission = require("./models/RolePermission");
 
 //view engine
 app.set("view engine", "ejs");
@@ -48,40 +57,51 @@ app.use((req, res, next) => {
 connection
   .authenticate()
   .then(() => {
-    console.log("success");
-    return connection.sync({ force: true });
+    console.log("Conectado ao banco de dados");
+    return connection.sync({ force: false });
   })
-  .then(() => {
-    console.log("Database synced");
-    const Profile = require("./profiles/Profile");
-    Profile.findOrCreate({
+  .then(async () => {
+    console.log("Banco de dados sincronizado");
+
+    // Criar roles
+    const roles = await Role.findOrCreate({
       where: { name: "admin" },
-      defaults: { description: "Administrador" },
+      defaults: { description: "Administrador - acesso total" },
     });
-    Profile.findOrCreate({
+
+    await Role.findOrCreate({
       where: { name: "professor" },
-      defaults: { description: "Professor" },
+      defaults: { description: "Professor - pode criar aulas" },
     });
-    Profile.findOrCreate({
+
+    await Role.findOrCreate({
+      where: { name: "aluno" },
+      defaults: { description: "Aluno - pode visualizar cursos" },
+    });
+
+    await Role.findOrCreate({
       where: { name: "enterprise" },
-      defaults: { description: "Empresa" },
+      defaults: { description: "Empresa - gerencia professores e alunos" },
     });
-    Profile.findOrCreate({
-      where: { name: "user" },
-      defaults: { description: "Usuário" },
-    });
+
+    console.log("Roles criados com sucesso");
   })
   .catch((error) => {
-    console.log(error);
+    console.error("Erro ao conectar/sincronizar banco de dados:", error);
   });
 
 app.get("/", (req, res) => {
   res.render("index");
 });
 
-app.use("/", courseController);
-app.use("/", userController);
-app.use("/", enterpriseController);
+// Routes de Autenticação
+app.use("/", authController);
+
+// Routes de Cursos (com autenticação)
+app.use("/", authenticate, courseController);
+
+// Routes de Empresas (com autenticação)
+app.use("/", authenticate, enterpriseController);
 
 app.listen(8080, (req, res) => {
   console.log("running");

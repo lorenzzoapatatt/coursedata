@@ -1,38 +1,138 @@
-<%- include('partials/header'); %>
+<%- include('partials/header') %>
 
 <div class="container">
-    <hr>
-    <div class="card mt-4">
-        <div class="card-header">
-            <h2>Cadastro de Usuário</h2>
+  <div class="row justify-content-center mt-5">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header bg-success text-white">
+          <h4 class="card-title mb-0">Criar Conta</h4>
         </div>
         <div class="card-body">
-            <form action="/register" method="post">
-                <input name="name" type="text" class="form-control mb-3" placeholder="Nome" required>
-                <input name="email" type="email" class="form-control mb-3" placeholder="Email" required>
-                <input name="password" type="password" class="form-control mb-3" placeholder="Senha" required>
-                <input name="phone" type="text" class="form-control mb-3" placeholder="Telefone" required>
-                
-                <label for="enterprise_id" class="form-label">Empresa</label>
-                <select name="enterprise_id" class="form-control mb-3" required>
-                    <option value="">Selecione uma empresa</option>
-                    <% enterprises.forEach((enterprise) => { %>
-                        <option value="<%= enterprise.id %>"><%= enterprise.name %></option>
-                    <% }); %>
-                </select>
+          <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              <%= error %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          <% } %>
 
-                <label for="profile_id" class="form-label">Perfil</label>
-                <select name="profile_id" class="form-control mb-3" required>
-                    <option value="">Selecione um perfil</option>
-                    <% profiles.forEach((profile) => { %>
-                        <option value="<%= profile.id %>"><%= profile.name %></option>
-                    <% }); %>
-                </select>
+          <form action="/auth/register" method="POST">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="name" class="form-label">Nome Completo *</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="name" 
+                  name="name" 
+                  required
+                  placeholder="Seu nome"
+                >
+              </div>
 
-                <button type="submit" class="btn btn-primary">Cadastrar</button>
-            </form>
+              <div class="col-md-6 mb-3">
+                <label for="email" class="form-label">Email *</label>
+                <input 
+                  type="email" 
+                  class="form-control" 
+                  id="email" 
+                  name="email" 
+                  required
+                  placeholder="seu@email.com"
+                >
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="password" class="form-label">Senha *</label>
+                <input 
+                  type="password" 
+                  class="form-control" 
+                  id="password" 
+                  name="password" 
+                  required
+                  placeholder="Escolha uma senha forte"
+                >
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="phone" class="form-label">Telefone</label>
+                <input 
+                  type="tel" 
+                  class="form-control" 
+                  id="phone" 
+                  name="phone" 
+                  placeholder="(11) 99999-9999"
+                >
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="enterprise_id" class="form-label">Empresa *</label>
+                <select 
+                  class="form-control" 
+                  id="enterprise_id" 
+                  name="enterprise_id" 
+                  required
+                >
+                  <option value="">Selecione uma empresa</option>
+                  <% if (typeof enterprises !== 'undefined') { %>
+                    <% enterprises.forEach(enterprise => { %>
+                      <option value="<%= enterprise.id %>">
+                        <%= enterprise.name %>
+                      </option>
+                    <% }); %>
+                  <% } %>
+                </select>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="role_id" class="form-label">Tipo de Usuário *</label>
+                <select 
+                  class="form-control" 
+                  id="role_id" 
+                  name="role_id" 
+                  required
+                >
+                  <option value="">Selecione seu papel</option>
+                  <% if (typeof roles !== 'undefined') { %>
+                    <% roles.forEach(role => { %>
+                      <option value="<%= role.id %>">
+                        <%= role.name.charAt(0).toUpperCase() + role.name.slice(1) %>
+                      </option>
+                    <% }); %>
+                  <% } %>
+                </select>
+              </div>
+            </div>
+
+            <div class="alert alert-info" role="alert">
+              <strong>Tipos de usuário:</strong>
+              <ul class="mb-0 mt-2">
+                <li><strong>Aluno:</strong> Pode visualizar e se matricular em cursos</li>
+                <li><strong>Professor:</strong> Pode criar aulas e gerenciar alunos</li>
+                <li><strong>Empresa:</strong> Pode gerenciar professores e alunos da empresa</li>
+              </ul>
+            </div>
+
+            <button type="submit" class="btn btn-success w-100 mt-3">
+              Criar Conta
+            </button>
+          </form>
+
+          <hr>
+
+          <p class="text-center text-muted mb-0">
+            Já tem conta? 
+            <a href="/login" class="text-decoration-none">
+              Clique aqui para fazer login
+            </a>
+          </p>
         </div>
+      </div>
     </div>
+  </div>
 </div>
 
-<%- include('partials/footer'); %>
+<%- include('partials/footer') %>
