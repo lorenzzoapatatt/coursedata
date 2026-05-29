@@ -5,7 +5,9 @@
     <div class="col-md-6">
       <div class="card">
         <div class="card-header bg-primary text-white">
-          <h4 class="card-title mb-0">Login</h4>
+          <h4 class="card-title mb-0">
+            <%= accountTypeName ? "Login de " + accountTypeName : "Login" %>
+          </h4>
         </div>
         <div class="card-body">
           <% if (typeof error !== 'undefined' && error) { %>
@@ -16,13 +18,17 @@
           <% } %>
 
           <form action="/auth/login" method="POST">
+            <% if (typeof accountTypeValue !== 'undefined') { %>
+              <input type="hidden" name="accountType" value="<%= accountTypeValue %>">
+            <% } %>
+
             <div class="mb-3">
               <label for="email" class="form-label">Email</label>
-              <input 
-                type="email" 
-                class="form-control" 
-                id="email" 
-                name="email" 
+              <input
+                type="email"
+                class="form-control"
+                id="email"
+                name="email"
                 required
                 placeholder="seu@email.com"
               >
@@ -30,11 +36,11 @@
 
             <div class="mb-3">
               <label for="password" class="form-label">Senha</label>
-              <input 
-                type="password" 
-                class="form-control" 
-                id="password" 
-                name="password" 
+              <input
+                type="password"
+                class="form-control"
+                id="password"
+                name="password"
                 required
                 placeholder="Sua senha"
               >
@@ -45,13 +51,17 @@
             </button>
           </form>
 
+          <% if (typeof returnPath !== 'undefined') { %>
+            <div class="text-center mt-3">
+              <a href="<%= returnPath %>" class="text-decoration-none">Voltar para seleção de contas</a>
+            </div>
+          <% } %>
+
           <hr>
 
           <p class="text-center text-muted mb-0">
-            Não tem conta? 
-            <a href="/register" class="text-decoration-none">
-              Clique aqui para se registrar
-            </a>
+            Não tem conta?
+            <a href="/register" class="text-decoration-none">Clique aqui para se registrar</a>
           </p>
         </div>
       </div>

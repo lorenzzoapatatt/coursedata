@@ -5,7 +5,9 @@
     <div class="col-md-8">
       <div class="card">
         <div class="card-header bg-success text-white">
-          <h4 class="card-title mb-0">Criar Conta</h4>
+          <h4 class="card-title mb-0">
+            Criar Conta <%= accountTypeName ? "- " + accountTypeName : "" %>
+          </h4>
         </div>
         <div class="card-body">
           <% if (typeof error !== 'undefined' && error) { %>
@@ -67,6 +69,13 @@
               </div>
             </div>
 
+            <% if (selectedRole) { %>
+              <input type="hidden" name="role_id" value="<%= selectedRole.id %>">
+              <div class="mb-3">
+                <label class="form-label">Tipo de Conta</label>
+                <div class="form-control-plaintext fw-bold"><%= accountTypeName %></div>
+              </div>
+            <% } %>
             <div class="row">
               <div class="col-md-6 mb-3">
                 <label for="enterprise_id" class="form-label">Empresa *</label>
@@ -87,24 +96,26 @@
                 </select>
               </div>
 
-              <div class="col-md-6 mb-3">
-                <label for="role_id" class="form-label">Tipo de Usuário *</label>
-                <select 
-                  class="form-control" 
-                  id="role_id" 
-                  name="role_id" 
-                  required
-                >
-                  <option value="">Selecione seu papel</option>
-                  <% if (typeof roles !== 'undefined') { %>
-                    <% roles.forEach(role => { %>
-                      <option value="<%= role.id %>">
-                        <%= role.name.charAt(0).toUpperCase() + role.name.slice(1) %>
-                      </option>
-                    <% }); %>
-                  <% } %>
-                </select>
-              </div>
+              <% if (!selectedRole) { %>
+                <div class="col-md-6 mb-3">
+                  <label for="role_id" class="form-label">Tipo de Usuário *</label>
+                  <select 
+                    class="form-control" 
+                    id="role_id" 
+                    name="role_id" 
+                    required
+                  >
+                    <option value="">Selecione seu papel</option>
+                    <% if (typeof roles !== 'undefined') { %>
+                      <% roles.forEach(role => { %>
+                        <option value="<%= role.id %>">
+                          <%= role.name.charAt(0).toUpperCase() + role.name.slice(1) %>
+                        </option>
+                      <% }); %>
+                    <% } %>
+                  </select>
+                </div>
+              <% } %>
             </div>
 
             <div class="alert alert-info" role="alert">

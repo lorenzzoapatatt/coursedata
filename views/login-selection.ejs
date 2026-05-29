@@ -1,0 +1,56 @@
+<%- include('partials/header') %>
+
+<div class="container">
+  <div class="row justify-content-center mt-5">
+    <div class="col-12 text-center mb-4">
+      <h1>Como você deseja entrar?</h1>
+      <p class="text-muted">Escolha se você é um usuário, professor ou empresa.</p>
+    </div>
+  </div>
+
+  <div class="row row-cols-1 row-cols-md-3 g-4">
+    <div class="col">
+      <a href="/login/user" class="text-decoration-none text-dark">
+        <div class="card h-100 shadow-sm border-success hover-shadow">
+          <div class="card-body text-center">
+            <h5 class="card-title">Usuário</h5>
+            <p class="card-text">Entrar como aluno para acessar cursos e atividades.</p>
+          </div>
+          <div class="card-footer bg-transparent text-center">
+            <span class="text-success">Login de usuário</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col">
+      <a href="/login/professor" class="text-decoration-none text-dark">
+        <div class="card h-100 shadow-sm border-primary hover-shadow">
+          <div class="card-body text-center">
+            <h5 class="card-title">Professor</h5>
+            <p class="card-text">Entrar como professor para gerenciar cursos e alunos.</p>
+          </div>
+          <div class="card-footer bg-transparent text-center">
+            <span class="text-primary">Login de professor</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col">
+      <a href="/enterprise/login" class="text-decoration-none text-dark">
+        <div class="card h-100 shadow-sm border-warning hover-shadow">
+          <div class="card-body text-center">
+            <h5 class="card-title">Empresa</h5>
+            <p class="card-text">Entrar como empresa para gerenciar professores e colaboradores.</p>
+          </div>
+          <div class="card-footer bg-transparent text-center">
+            <span class="text-warning">Login de empresa</span>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

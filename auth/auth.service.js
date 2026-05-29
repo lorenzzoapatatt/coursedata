@@ -16,9 +16,8 @@ class AuthService {
    * @param {string} password - Senha do usuário
    * @returns {Promise<Object>} Dados do usuário autenticado com permissões
    */
-  static async login(email, password) {
+  static async login(email, password, roleName) {
     try {
-      // Buscar usuário com role e permissões
       const user = await User.findOne({
         where: { email: email },
         include: [
@@ -34,28 +33,27 @@ class AuthService {
         ],
       });
 
-      // Usuário não existe
       if (!user) {
         throw new Error("Usuário não encontrado");
       }
 
-      // Usuário inativo
+      if (roleName && user.role.name !== roleName) {
+        throw new Error("Tipo de conta incorreto para esta senha");
+      }
+
       if (!user.is_active) {
         throw new Error("Usuário inativo");
       }
 
-      // Validar senha
       const passwordValid = bcrypt.compareSync(password, user.password);
       if (!passwordValid) {
         throw new Error("Senha incorreta");
       }
 
-      // Extrair permissões do role
       const permissions = user.role.role_permissions.map(
         (rp) => rp.permission.name,
       );
 
-      // Retornar dados do usuário sem a senha
       return {
         id: user.id,
         name: user.name,

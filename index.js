@@ -97,11 +97,11 @@ app.get("/", (req, res) => {
 // Routes de Autenticação
 app.use("/", authController);
 
-// Routes de Cursos (com autenticação)
-app.use("/", authenticate, courseController);
+// Routes de Cursos
+app.use("/", courseController);
 
-// Routes de Empresas (com autenticação)
-app.use("/", authenticate, enterpriseController);
+// Routes de Empresas
+app.use("/", enterpriseController);
 
 app.listen(8080, (req, res) => {
   console.log("running");

@@ -1,0 +1,56 @@
+<%- include('partials/header') %>
+
+<div class="container">
+  <div class="row justify-content-center mt-5">
+    <div class="col-12 text-center mb-4">
+      <h1>Escolha o tipo de conta</h1>
+      <p class="text-muted">Selecione o tipo de conta que melhor descreve sua participação na plataforma.</p>
+    </div>
+  </div>
+
+  <div class="row row-cols-1 row-cols-md-3 g-4">
+    <div class="col">
+      <a href="/register/user" class="text-decoration-none text-dark">
+        <div class="card h-100 shadow-sm border-success hover-shadow">
+          <div class="card-body text-center">
+            <h5 class="card-title">Usuário</h5>
+            <p class="card-text">Acesse cursos e junte-se a uma empresa existente.</p>
+          </div>
+          <div class="card-footer bg-transparent text-center">
+            <span class="text-success">Registrar como usuário</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col">
+      <a href="/register/professor" class="text-decoration-none text-dark">
+        <div class="card h-100 shadow-sm border-primary hover-shadow">
+          <div class="card-body text-center">
+            <h5 class="card-title">Professor</h5>
+            <p class="card-text">Crie aulas e gerencie alunos dentro de uma empresa.</p>
+          </div>
+          <div class="card-footer bg-transparent text-center">
+            <span class="text-primary">Registrar como professor</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col">
+      <a href="/enterprise/register" class="text-decoration-none text-dark">
+        <div class="card h-100 shadow-sm border-warning hover-shadow">
+          <div class="card-body text-center">
+            <h5 class="card-title">Empresa</h5>
+            <p class="card-text">Crie a conta da empresa diretamente. Não selecione outra empresa.</p>
+          </div>
+          <div class="card-footer bg-transparent text-center">
+            <span class="text-warning">Registrar empresa</span>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
