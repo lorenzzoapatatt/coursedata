@@ -37,14 +37,6 @@ router.get("/login/professor", (req, res) => {
 });
 
 /**
- * GET /login/enterprise
- * Redirecionar para o login de empresa existente
- */
-router.get("/login/enterprise", (req, res) => {
-  res.redirect("/enterprise/login");
-});
-
-/**
  * POST /auth/login
  * Autenticar usuário
  */

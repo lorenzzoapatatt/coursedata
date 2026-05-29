@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const User = require("./User");
 const Enterprise = require("../enterprises/Enterprise");
-const Profile = require("../profiles/Profile");
 const bcrypt = require("bcryptjs");
 const adminAuth = require("../middleware/adminAuth");
 const adminOnly = require("../middleware/adminOnly");
