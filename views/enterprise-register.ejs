@@ -1,0 +1,98 @@
+<%- include('partials/header') %>
+
+<div class="container">
+  <div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+      <div class="card shadow-lg">
+        <div class="card-body p-5">
+          <h1 class="card-title text-center mb-4">Registrar Empresa</h1>
+
+          <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger" role="alert">
+              <%= error %>
+            </div>
+          <% } %>
+
+          <form action="/enterprise/register" method="POST">
+            <div class="mb-3">
+              <label for="name" class="form-label">Nome da Empresa</label>
+              <input
+                type="text"
+                class="form-control"
+                id="name"
+                name="name"
+                placeholder="Nome da sua empresa"
+                required
+              />
+            </div>
+
+            <div class="mb-3">
+              <label for="cnpj" class="form-label">CNPJ (Opcional)</label>
+              <input
+                type="text"
+                class="form-control"
+                id="cnpj"
+                name="cnpj"
+                placeholder="00.000.000/0000-00"
+              />
+            </div>
+
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input
+                type="email"
+                class="form-control"
+                id="email"
+                name="email"
+                placeholder="seu@empresa.com"
+                required
+              />
+            </div>
+
+            <div class="mb-3">
+              <label for="phone" class="form-label">Telefone (Opcional)</label>
+              <input
+                type="tel"
+                class="form-control"
+                id="phone"
+                name="phone"
+                placeholder="(11) 99999-9999"
+              />
+            </div>
+
+            <div class="mb-3">
+              <label for="password" class="form-label">Senha</label>
+              <input
+                type="password"
+                class="form-control"
+                id="password"
+                name="password"
+                placeholder="Crie uma senha segura"
+                required
+              />
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mb-3">
+              Registrar
+            </button>
+          </form>
+
+          <div class="text-center">
+            <p class="mb-2">Já tem conta?</p>
+            <a href="/login/enterprise" class="btn btn-outline-secondary w-100">
+              Fazer Login
+            </a>
+          </div>
+
+          <div class="text-center mt-3">
+            <a href="/register" class="text-muted text-decoration-none">
+              Voltar para seleção de conta
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

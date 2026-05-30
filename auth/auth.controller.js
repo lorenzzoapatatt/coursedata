@@ -3,6 +3,7 @@ const router = express.Router();
 const AuthService = require("./auth.service");
 const Enterprise = require("../enterprises/Enterprise");
 const Role = require("../models/Role");
+const bcrypt = require("bcryptjs");
 
 /**
  * GET /login
@@ -155,6 +156,127 @@ router.post("/auth/register", async (req, res) => {
       error: error.message,
       enterprises,
       selectedRole,
+    });
+  }
+});
+
+/**
+ * GET /login/enterprise
+ * Exibir login para empresa
+ */
+router.get("/login/enterprise", (req, res) => {
+  res.render("enterprise-login");
+});
+
+/**
+ * POST /enterprise/auth
+ * Autenticar empresa
+ */
+router.post("/enterprise/auth", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).render("enterprise-login", {
+        error: "Email e senha são obrigatórios",
+      });
+    }
+
+    const enterprise = await Enterprise.findOne({ where: { email: email } });
+
+    if (!enterprise) {
+      return res.status(401).render("enterprise-login", {
+        error: "Empresa não encontrada",
+      });
+    }
+
+    if (!enterprise.is_active) {
+      return res.status(401).render("enterprise-login", {
+        error: "Empresa inativa",
+      });
+    }
+
+    const passwordValid = bcrypt.compareSync(password, enterprise.password);
+    if (!passwordValid) {
+      return res.status(401).render("enterprise-login", {
+        error: "Senha incorreta",
+      });
+    }
+
+    req.session.user = {
+      id: enterprise.id,
+      name: enterprise.name,
+      email: enterprise.email,
+      role: "enterprise",
+      type: "enterprise",
+    };
+
+    res.redirect("/");
+  } catch (error) {
+    console.error("Erro ao fazer login:", error.message);
+    res.status(500).render("enterprise-login", {
+      error: "Erro ao processar login",
+    });
+  }
+});
+
+/**
+ * GET /register/enterprise
+ * Exibir registro para empresa
+ */
+router.get("/register/enterprise", (req, res) => {
+  res.render("enterprise-register");
+});
+
+/**
+ * POST /enterprise/register
+ * Registrar nova empresa
+ */
+router.post("/enterprise/register", async (req, res) => {
+  try {
+    const { name, cnpj, email, password, phone } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).render("enterprise-register", {
+        error: "Nome, email e senha são obrigatórios",
+      });
+    }
+
+    const existingEnterprise = await Enterprise.findOne({
+      where: { email: email },
+    });
+
+    if (existingEnterprise) {
+      return res.status(400).render("enterprise-register", {
+        error: "Email já registrado",
+      });
+    }
+
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(password, salt);
+
+    const enterprise = await Enterprise.create({
+      name,
+      cnpj: cnpj || null,
+      email,
+      password: hashedPassword,
+      phone: phone || null,
+      is_active: true,
+    });
+
+    req.session.user = {
+      id: enterprise.id,
+      name: enterprise.name,
+      email: enterprise.email,
+      role: "enterprise",
+      type: "enterprise",
+    };
+
+    res.redirect("/");
+  } catch (error) {
+    console.error("Erro ao registrar:", error.message);
+    res.status(500).render("enterprise-register", {
+      error: "Erro ao processar registro",
     });
   }
 });
