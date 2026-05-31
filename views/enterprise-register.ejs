@@ -2,11 +2,16 @@
 
 <div class="container">
   <div class="row justify-content-center mt-5">
-    <div class="col-md-6">
-      <div class="card shadow-lg">
-        <div class="card-body p-5">
-          <h1 class="card-title text-center mb-4">Registrar Empresa</h1>
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header bg-success text-white">
+          <h4 class="card-title mb-0">
+            Criar Conta 
+            <%= typeof accountTypeName !== 'undefined' && accountTypeName ? "- " + accountTypeName : "" %>
+          </h4>
+        </div>
 
+        <div class="card-body">
           <% if (typeof error !== 'undefined' && error) { %>
             <div class="alert alert-danger" role="alert">
               <%= error %>
@@ -77,16 +82,13 @@
             </button>
           </form>
 
-          <div class="text-center">
-            <p class="mb-2">Já tem conta?</p>
-            <a href="/login/enterprise" class="btn btn-outline-secondary w-100">
-              Fazer Login
-            </a>
-          </div>
+          <hr>
 
-          <div class="text-center mt-3">
-            <a href="/register" class="text-muted text-decoration-none">
-              Voltar para seleção de conta
+          <div class="text-center">
+            <p class="text-muted mb-2">Já tem conta?</p>
+
+            <a href="/login/enterprise" class="btn btn-outline-secondary w-100">
+              Clique aqui para fazer login
             </a>
           </div>
         </div>

@@ -6,7 +6,7 @@
       <div class="card">
         <div class="card-header bg-primary text-white">
           <h4 class="card-title mb-0">
-            <%= accountTypeName ? "Login de " + accountTypeName : "Login" %>
+            <%= typeof accountTypeName !== 'undefined' && accountTypeName ? "Entrar - " + accountTypeName : "Entrar" %>
           </h4>
         </div>
         <div class="card-body">

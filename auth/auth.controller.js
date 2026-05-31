@@ -130,6 +130,10 @@ router.post("/auth/register", async (req, res) => {
         error: "Todos os campos obrigatórios devem ser preenchidos",
         enterprises,
         selectedRole,
+        accountTypeName: selectedRole
+          ? selectedRole.name.charAt(0).toUpperCase() +
+            selectedRole.name.slice(1)
+          : undefined,
       });
     }
 
@@ -156,6 +160,9 @@ router.post("/auth/register", async (req, res) => {
       error: error.message,
       enterprises,
       selectedRole,
+      accountTypeName: selectedRole
+        ? selectedRole.name.charAt(0).toUpperCase() + selectedRole.name.slice(1)
+        : undefined,
     });
   }
 });
