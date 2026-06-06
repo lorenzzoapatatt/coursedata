@@ -3,7 +3,9 @@ const router = express.Router();
 const Course = require("./Course");
 const slugify = require("slugify");
 const { authorize, PERMISSIONS } = require("../middleware/rbac");
-const coursePanelAuth = authorize(PERMISSIONS.COURSE_PANEL);
+const coursePanelAuth = authorize(PERMISSIONS.COURSE_PANEL, {
+  loginPath: "/professor/login",
+});
 
 router.get("/admin/courses/new", coursePanelAuth, (req, res) => {
   res.render("admin/courses/new");

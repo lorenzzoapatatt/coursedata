@@ -4,16 +4,19 @@ const User = require("./User");
 const Enterprise = require("../enterprises/Enterprise");
 const Profile = require("../profiles/Profile");
 const bcrypt = require("bcryptjs");
-const { Op } = require("sequelize");
-const { authorize, PERMISSIONS, normalizeRole } = require("../middleware/rbac");
+const { authorize, PERMISSIONS, normalizeRole, ROLES } = require("../middleware/rbac");
 
-router.get("/admin/users", authorize(PERMISSIONS.USER_PANEL), (req, res) => {
+router.get("/admin/users", authorize(PERMISSIONS.USER_PANEL, { loginPath: "/student/login" }), (req, res) => {
   User.findAll().then((users) => {
     res.render("admin/users/index", { users: users });
   });
 });
 
-router.get("/admin/users/create", authorize(PERMISSIONS.MANAGE_USERS), (req, res) => {
+const adminOnly = authorize(PERMISSIONS.MANAGE_USERS, {
+  loginPath: "/admin/login",
+});
+
+router.get("/admin/users/create", adminOnly, (req, res) => {
   Promise.all([Enterprise.findAll(), Profile.findAll()])
     .then(([enterprises, profiles]) => {
       res.render("admin/users/create", {
@@ -27,7 +30,7 @@ router.get("/admin/users/create", authorize(PERMISSIONS.MANAGE_USERS), (req, res
     });
 });
 
-router.post("/users/create", authorize(PERMISSIONS.MANAGE_USERS), (req, res) => {
+router.post("/users/create", adminOnly, (req, res) => {
   let name = req.body.name;
   let email = req.body.email;
   let password = req.body.password;
@@ -67,33 +70,42 @@ router.post("/users/create", authorize(PERMISSIONS.MANAGE_USERS), (req, res) => 
 });
 
 router.get("/login", (req, res) => {
+  res.redirect("/student/login");
+});
+
+router.get("/admin/login", (req, res) => {
   res.render("admin/users/login");
 });
 
-router.post("/auth", (req, res) => {
+router.post("/admin/auth", (req, res) => {
   let email = req.body.email;
   let password = req.body.password;
 
   User.findOne({ where: { email: email }, include: [Profile] })
     .then((user) => {
-      const correct = Boolean(user) && bcrypt.compareSync(password, user.password);
+      const correct =
+        Boolean(user) &&
+        normalizeRole(user.profile.name) === ROLES.ADMIN &&
+        bcrypt.compareSync(password, user.password);
       const authActions = {
         true: () => {
           req.session.user = {
             id: user.id,
+            name: user.name,
             email: user.email,
-            profile: normalizeRole(user.profile.name),
+            profile: ROLES.ADMIN,
+            enterprise_id: user.enterprise_id,
           };
           return res.redirect("/");
         },
-        false: () => res.redirect("/login"),
+        false: () => res.redirect("/admin/login"),
       };
 
       return authActions[correct]();
     })
     .catch((error) => {
       console.log(error);
-      res.redirect("/login");
+      res.redirect("/admin/login");
     });
 });
 
@@ -103,69 +115,7 @@ router.get("/logout", (req, res) => {
 });
 
 router.get("/register", (req, res) => {
-  Enterprise.findAll()
-    .then((enterprises) => {
-      Profile.findAll()
-        .then((profiles) => {
-          res.render("register", { enterprises, profiles });
-        })
-        .catch((error) => {
-          console.log(error);
-          res.status(500).send("Erro");
-        });
-    })
-    .catch((error) => {
-      console.log(error);
-      res.status(500).send("Erro");
-    });
-});
-
-router.post("/register", (req, res) => {
-  let name = req.body.name;
-  let email = req.body.email;
-  let password = req.body.password;
-  let phone = req.body.phone;
-  let enterprise_id = req.body.enterprise_id;
-  let profile_id = req.body.profile_id;
-
-  Profile.findOne({ where: { name: { [Op.in]: ["student", "user"] } } })
-    .then((profile) => {
-      if (!profile) {
-        res.status(500).send("Perfil padrão não encontrado");
-        return;
-      }
-      let profile_id = profile.id;
-
-      User.findOne({ where: { email: email } }).then((user) => {
-        if (user) {
-          res.status(400).send("Email já registrado");
-          return;
-        }
-
-        let salt = bcrypt.genSaltSync(10);
-        let hash = bcrypt.hashSync(password, salt);
-
-        User.create({
-          name,
-          email,
-          password: hash,
-          phone,
-          enterprise_id,
-          profile_id,
-        })
-          .then(() => {
-            res.redirect("/login");
-          })
-          .catch((error) => {
-            console.log(error);
-            res.status(500).send("Erro ao criar usuário");
-          });
-      });
-    })
-    .catch((error) => {
-      console.log(error);
-      res.status(500).send("Erro");
-    });
+  res.render("register");
 });
 
 module.exports = router;

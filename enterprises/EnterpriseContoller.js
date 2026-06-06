@@ -2,8 +2,10 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const Enterprise = require("./Enterprise");
-const { authorize, PERMISSIONS } = require("../middleware/rbac");
-const enterprisePanelAuth = authorize(PERMISSIONS.ENTERPRISE_PANEL);
+const { authorize, PERMISSIONS, ROLES } = require("../middleware/rbac");
+const enterprisePanelAuth = authorize(PERMISSIONS.ENTERPRISE_PANEL, {
+  loginPath: "/enterprise/login",
+});
 
 router.get("/admin/enterprises/new", enterprisePanelAuth, (req, res) => {
   res.render("admin/enterprises/new");
@@ -163,8 +165,10 @@ router.post("/enterprise/auth", (req, res) => {
         true: () => {
           req.session.user = {
             id: enterprise.id,
+            name: enterprise.name,
             email: enterprise.email,
-            profile: "enterprise",
+            profile: ROLES.ENTERPRISE,
+            enterprise_id: enterprise.id,
           };
           return res.redirect("/");
         },

@@ -1,22 +1,24 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const app = express();
 const session = require("express-session");
+const app = express();
 const connection = require("./database/database");
 const { canAccess, getAllowedPanelLinks, PERMISSIONS } = require("./middleware/rbac");
 
 const courseController = require("./courses/CourseController");
 const userController = require("./users/UserController");
 const enterpriseController = require("./enterprises/EnterpriseContoller");
+const studentController = require("./students/StudentController");
+const professorController = require("./professors/ProfessorController");
 
-const Course = require("./courses/Course");
-const User = require("./users/User");
-const Enterprise = require("./enterprises/Enterprise");
+require("./courses/Course");
+require("./users/User");
+require("./enterprises/Enterprise");
+require("./students/Student");
+require("./professors/Professor");
 
-//view engine
 app.set("view engine", "ejs");
 
-//Sessions
 app.use(
   session({
     secret: "Naometoque1371626",
@@ -26,16 +28,11 @@ app.use(
   }),
 );
 
-//Redis
-
-//static files
 app.use(express.static("public"));
 
-//body parser
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// Make session available in views
 app.use((req, res, next) => {
   const user = req.session.user;
 
@@ -47,20 +44,16 @@ app.use((req, res, next) => {
   next();
 });
 
-//User.sync({ force: true });
-//Course.sync({ force: true });
-
-//Database
-
 connection
   .authenticate()
   .then(() => {
-    console.log("success");
-    return connection.sync({ force: true });
+    console.log("Database connected");
+    return connection.sync();
   })
   .then(() => {
     console.log("Database synced");
     const Profile = require("./profiles/Profile");
+
     Profile.findOrCreate({
       where: { name: "admin" },
       defaults: { description: "Administrador" },
@@ -89,7 +82,18 @@ app.get("/", (req, res) => {
 app.use("/", courseController);
 app.use("/", userController);
 app.use("/", enterpriseController);
+app.use("/", studentController);
+app.use("/", professorController);
 
-app.listen(8080, (req, res) => {
-  console.log("running");
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", message: "Server is running" });
+});
+
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
+
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

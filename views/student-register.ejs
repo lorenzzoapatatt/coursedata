@@ -1,0 +1,32 @@
+<%- include('partials/header'); %>
+<%- include('partials/navbar'); %>
+
+<div class="container">
+    <hr>
+    <div class="card mt-4">
+        <div class="card-header">
+            <h2>Cadastro de aluno</h2>
+        </div>
+        <div class="card-body">
+            <form action="/student/register" method="post">
+                <input name="name" type="text" class="form-control mb-3" placeholder="Nome" required>
+                <input name="email" type="email" class="form-control mb-3" placeholder="Email" required>
+                <input name="password" type="password" class="form-control mb-3" placeholder="Senha" required>
+                <input name="phone" type="text" class="form-control mb-3" placeholder="Telefone" required>
+
+                <label for="enterprise_id" class="form-label">Empresa</label>
+                <select name="enterprise_id" class="form-control mb-3" required>
+                    <option value="">Selecione uma empresa</option>
+                    <% enterprises.forEach((enterprise) => { %>
+                        <option value="<%= enterprise.id %>"><%= enterprise.name %></option>
+                    <% }); %>
+                </select>
+
+                <button type="submit" class="btn btn-primary">Cadastrar aluno</button>
+                <a href="/register" class="btn btn-link">Voltar</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer'); %>
