@@ -2,13 +2,14 @@ const express = require("express");
 const router = express.Router();
 const Course = require("./Course");
 const slugify = require("slugify");
-const courseAuth = require("../middleware/courseAuth");
+const { authorize, PERMISSIONS } = require("../middleware/rbac");
+const coursePanelAuth = authorize(PERMISSIONS.COURSE_PANEL);
 
-router.get("/admin/courses/new", courseAuth, (req, res) => {
+router.get("/admin/courses/new", coursePanelAuth, (req, res) => {
   res.render("admin/courses/new");
 });
 
-router.post("/courses/save", courseAuth, (req, res) => {
+router.post("/courses/save", coursePanelAuth, (req, res) => {
   let name = req.body.name;
   let workload = req.body.workload;
   let description = req.body.description;
@@ -36,7 +37,7 @@ router.post("/courses/save", courseAuth, (req, res) => {
   }
 });
 
-router.get("/admin/courses", courseAuth, (req, res) => {
+router.get("/admin/courses", coursePanelAuth, (req, res) => {
   Course.findAll()
     .then((courses) => {
       res.render("admin/courses/index", { courses: courses });
@@ -47,7 +48,7 @@ router.get("/admin/courses", courseAuth, (req, res) => {
     });
 });
 
-router.post("/courses/delete", courseAuth, (req, res) => {
+router.post("/courses/delete", coursePanelAuth, (req, res) => {
   var id = req.body.id;
   if (id != undefined) {
     if (!isNaN(id)) {
@@ -68,7 +69,7 @@ router.post("/courses/delete", courseAuth, (req, res) => {
   }
 });
 
-router.get("/admin/courses/edit/:id", courseAuth, (req, res) => {
+router.get("/admin/courses/edit/:id", coursePanelAuth, (req, res) => {
   var id = req.params.id;
 
   //checks if it's a number
@@ -90,7 +91,7 @@ router.get("/admin/courses/edit/:id", courseAuth, (req, res) => {
     });
 });
 
-router.post("/courses/update", courseAuth, (req, res) => {
+router.post("/courses/update", coursePanelAuth, (req, res) => {
   var id = req.body.id;
   var name = req.body.name;
   var workload = req.body.workload;

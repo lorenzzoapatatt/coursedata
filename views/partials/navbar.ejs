@@ -26,21 +26,11 @@
           <a href="/" class="nav-link active" aria-current="page">Home</a>
         </li>
         <% if (user) { %>
-          <% if (['admin', 'professor', 'user'].includes(user.profile)) { %>
+          <% (navLinks || []).forEach((link) => { %>
             <li class="nav-item">
-              <a href="/admin/courses" class="nav-link">Courses</a>
+              <a href="<%= link.href %>" class="nav-link"><%= link.label %></a>
             </li>
-          <% } %>
-          <% if (['admin', 'professor', 'enterprise'].includes(user.profile)) { %>
-            <li class="nav-item">
-              <a href="/admin/enterprises" class="nav-link">Enterprises</a>
-            </li>
-          <% } %>
-          <% if (user.profile === 'admin') { %>
-            <li class="nav-item">
-              <a href="/admin/users" class="nav-link">Users</a>
-            </li>
-          <% } %>
+          <% }) %>
           <li class="nav-item">
             <a href="/logout" class="nav-link">Logout</a>
           </li>

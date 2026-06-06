@@ -1,9 +1,3 @@
-function auth(req, res, next) {
-  if (req.session.user != undefined) {
-    next();
-  } else {
-    res.redirect("/login");
-  }
-}
+const { authorize, PERMISSIONS } = require("./rbac");
 
-module.exports = auth;
+module.exports = authorize(PERMISSIONS.AUTHENTICATED);

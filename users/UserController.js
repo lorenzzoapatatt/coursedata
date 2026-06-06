@@ -4,16 +4,16 @@ const User = require("./User");
 const Enterprise = require("../enterprises/Enterprise");
 const Profile = require("../profiles/Profile");
 const bcrypt = require("bcryptjs");
-const adminAuth = require("../middleware/adminAuth");
-const adminOnly = require("../middleware/adminOnly");
+const { Op } = require("sequelize");
+const { authorize, PERMISSIONS, normalizeRole } = require("../middleware/rbac");
 
-router.get("/admin/users", adminOnly, (req, res) => {
+router.get("/admin/users", authorize(PERMISSIONS.USER_PANEL), (req, res) => {
   User.findAll().then((users) => {
     res.render("admin/users/index", { users: users });
   });
 });
 
-router.get("/admin/users/create", adminOnly, (req, res) => {
+router.get("/admin/users/create", authorize(PERMISSIONS.MANAGE_USERS), (req, res) => {
   Promise.all([Enterprise.findAll(), Profile.findAll()])
     .then(([enterprises, profiles]) => {
       res.render("admin/users/create", {
@@ -27,7 +27,7 @@ router.get("/admin/users/create", adminOnly, (req, res) => {
     });
 });
 
-router.post("/users/create", adminOnly, (req, res) => {
+router.post("/users/create", authorize(PERMISSIONS.MANAGE_USERS), (req, res) => {
   let name = req.body.name;
   let email = req.body.email;
   let password = req.body.password;
@@ -74,25 +74,27 @@ router.post("/auth", (req, res) => {
   let email = req.body.email;
   let password = req.body.password;
 
-  User.findOne({ where: { email: email }, include: [Profile] }).then((user) => {
-    if (user != undefined) {
-      // Validar senha
-      let correct = bcrypt.compareSync(password, user.password);
+  User.findOne({ where: { email: email }, include: [Profile] })
+    .then((user) => {
+      const correct = Boolean(user) && bcrypt.compareSync(password, user.password);
+      const authActions = {
+        true: () => {
+          req.session.user = {
+            id: user.id,
+            email: user.email,
+            profile: normalizeRole(user.profile.name),
+          };
+          return res.redirect("/");
+        },
+        false: () => res.redirect("/login"),
+      };
 
-      if (correct) {
-        req.session.user = {
-          id: user.id,
-          email: user.email,
-          profile: user.profile.name,
-        };
-        res.redirect("/");
-      } else {
-        res.redirect("/login");
-      }
-    } else {
+      return authActions[correct]();
+    })
+    .catch((error) => {
+      console.log(error);
       res.redirect("/login");
-    }
-  });
+    });
 });
 
 router.get("/logout", (req, res) => {
@@ -126,7 +128,7 @@ router.post("/register", (req, res) => {
   let enterprise_id = req.body.enterprise_id;
   let profile_id = req.body.profile_id;
 
-  Profile.findOne({ where: { name: "user" } })
+  Profile.findOne({ where: { name: { [Op.in]: ["student", "user"] } } })
     .then((profile) => {
       if (!profile) {
         res.status(500).send("Perfil padrão não encontrado");

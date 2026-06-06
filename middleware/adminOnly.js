@@ -1,9 +1,3 @@
-function adminOnly(req, res, next) {
-  if (req.session.user && req.session.user.profile === "admin") {
-    next();
-  } else {
-    res.status(403).send("Acesso negado");
-  }
-}
+const { authorize, PERMISSIONS } = require("./rbac");
 
-module.exports = adminOnly;
+module.exports = authorize(PERMISSIONS.MANAGE_USERS);

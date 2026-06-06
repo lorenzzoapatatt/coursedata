@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const app = express();
 const session = require("express-session");
 const connection = require("./database/database");
+const { canAccess, getAllowedPanelLinks, PERMISSIONS } = require("./middleware/rbac");
 
 const courseController = require("./courses/CourseController");
 const userController = require("./users/UserController");
@@ -36,7 +37,13 @@ app.use(bodyParser.json());
 
 // Make session available in views
 app.use((req, res, next) => {
-  res.locals.user = req.session.user;
+  const user = req.session.user;
+
+  res.locals.user = user;
+  res.locals.navLinks = getAllowedPanelLinks(user);
+  res.locals.PERMISSIONS = PERMISSIONS;
+  res.locals.canAccess = (permission) => canAccess(user, permission);
+
   next();
 });
 
@@ -67,8 +74,8 @@ connection
       defaults: { description: "Empresa" },
     });
     Profile.findOrCreate({
-      where: { name: "user" },
-      defaults: { description: "Usuário" },
+      where: { name: "student" },
+      defaults: { description: "Aluno" },
     });
   })
   .catch((error) => {

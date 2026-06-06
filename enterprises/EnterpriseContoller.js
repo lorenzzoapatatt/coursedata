@@ -2,17 +2,18 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const Enterprise = require("./Enterprise");
-const enterpriseAuth = require("../middleware/enterpriseAuth");
+const { authorize, PERMISSIONS } = require("../middleware/rbac");
+const enterprisePanelAuth = authorize(PERMISSIONS.ENTERPRISE_PANEL);
 
-router.get("/admin/enterprises/new", enterpriseAuth, (req, res) => {
+router.get("/admin/enterprises/new", enterprisePanelAuth, (req, res) => {
   res.render("admin/enterprises/new");
 });
 
-router.get("/admin/enterprises/create", enterpriseAuth, (req, res) => {
+router.get("/admin/enterprises/create", enterprisePanelAuth, (req, res) => {
   res.redirect("/admin/enterprises/new");
 });
 
-router.get("/admin/enterprises", enterpriseAuth, (req, res) => {
+router.get("/admin/enterprises", enterprisePanelAuth, (req, res) => {
   Enterprise.findAll()
     .then((enterprises) => {
       res.render("admin/enterprises/index", { enterprises: enterprises });
@@ -23,7 +24,7 @@ router.get("/admin/enterprises", enterpriseAuth, (req, res) => {
     });
 });
 
-router.post("/admin/enterprises/save", enterpriseAuth, (req, res) => {
+router.post("/admin/enterprises/save", enterprisePanelAuth, (req, res) => {
   let name = req.body.name;
   let cnpj = req.body.cnpj;
   let email = req.body.email;
@@ -66,7 +67,7 @@ router.post("/admin/enterprises/save", enterpriseAuth, (req, res) => {
     });
 });
 
-router.get("/admin/enterprises/edit/:id", enterpriseAuth, (req, res) => {
+router.get("/admin/enterprises/edit/:id", enterprisePanelAuth, (req, res) => {
   let id = req.params.id;
 
   if (isNaN(id)) {
@@ -87,7 +88,7 @@ router.get("/admin/enterprises/edit/:id", enterpriseAuth, (req, res) => {
     });
 });
 
-router.post("/admin/enterprises/update", enterpriseAuth, (req, res) => {
+router.post("/admin/enterprises/update", enterprisePanelAuth, (req, res) => {
   let id = req.body.id;
   let name = req.body.name;
   let cnpj = req.body.cnpj;
@@ -125,7 +126,7 @@ router.post("/admin/enterprises/update", enterpriseAuth, (req, res) => {
   }
 });
 
-router.post("/admin/enterprises/delete", (req, res) => {
+router.post("/admin/enterprises/delete", enterprisePanelAuth, (req, res) => {
   let id = req.body.id;
 
   if (id != undefined && !isNaN(id)) {
@@ -152,24 +153,30 @@ router.post("/enterprise/auth", (req, res) => {
   let email = req.body.email;
   let password = req.body.password;
 
-  Enterprise.findOne({ where: { email: email } }).then((enterprise) => {
-    if (enterprise != undefined) {
-      let correct = bcrypt.compareSync(password, enterprise.password);
+  Enterprise.findOne({ where: { email: email } })
+    .then((enterprise) => {
+      const correct =
+        Boolean(enterprise) &&
+        enterprise.is_active &&
+        bcrypt.compareSync(password, enterprise.password);
+      const authActions = {
+        true: () => {
+          req.session.user = {
+            id: enterprise.id,
+            email: enterprise.email,
+            profile: "enterprise",
+          };
+          return res.redirect("/");
+        },
+        false: () => res.redirect("/enterprise/login"),
+      };
 
-      if (correct && enterprise.is_active) {
-        req.session.user = {
-          id: enterprise.id,
-          email: enterprise.email,
-          profile: "enterprise",
-        };
-        res.redirect("/");
-      } else {
-        res.redirect("/enterprise/login");
-      }
-    } else {
+      return authActions[correct]();
+    })
+    .catch((error) => {
+      console.log(error);
       res.redirect("/enterprise/login");
-    }
-  });
+    });
 });
 
 router.get("/enterprise/register", (req, res) => {

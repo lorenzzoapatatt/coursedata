@@ -2,27 +2,34 @@
 <%- include('../../partials/navbar'); %>
 
 <div class="container">
+    <% const canManageUsers = canAccess(PERMISSIONS.MANAGE_USERS); %>
     <hr>
     <h2>Users</h2>
-    <a class="btn btn-success" href="/admin/users/create">Create User</a>
+    <% if (canManageUsers) { %>
+        <a class="btn btn-success" href="/admin/users/create">Create User</a>
+    <% } %>
     <hr>
     <table class="table table-bordered">
         <thead>
             <tr>
                 <th>ID</th>
                 <th>Email</th>
-                <th>Actions</th>
+                <% if (canManageUsers) { %>
+                    <th>Actions</th>
+                <% } %>
             </tr>
         </thead>
         <tbody>
-            <% users.forEach(user => { %>
+            <% users.forEach((listedUser) => { %>
                 <tr>
-                    <td><%= user.id %></td>
-                    <td><%= user.email %></td>
-                    <td>
-                        <a class="btn btn-primary" href="/admin/users/edit/<%= user.id %>">Edit</a>
-                        <a class="btn btn-danger" href="/admin/users/delete/<%= user.id %>">Delete</a>
-                    </td>
+                    <td><%= listedUser.id %></td>
+                    <td><%= listedUser.email %></td>
+                    <% if (canManageUsers) { %>
+                        <td>
+                            <a class="btn btn-primary" href="/admin/users/edit/<%= listedUser.id %>">Edit</a>
+                            <a class="btn btn-danger" href="/admin/users/delete/<%= listedUser.id %>">Delete</a>
+                        </td>
+                    <% } %>
                 </tr>
             <% }); %>
         </tbody>
