@@ -6,17 +6,81 @@ const Profile = require("../profiles/Profile");
 const bcrypt = require("bcryptjs");
 const { authorize, PERMISSIONS, normalizeRole, ROLES } = require("../middleware/rbac");
 
-router.get("/admin/users", authorize(PERMISSIONS.USER_PANEL, { loginPath: "/student/login" }), (req, res) => {
+const LOGIN_PATH = "/login";
+
+const getProfileName = (user) => user?.profile?.name || user?.Profile?.name;
+
+const createUserSession = (req, user) => {
+  const profile = normalizeRole(getProfileName(user));
+
+  req.session.user = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    profile,
+    enterprise_id: user.enterprise_id,
+  };
+};
+
+const createEnterpriseSession = (req, enterprise) => {
+  req.session.user = {
+    id: enterprise.id,
+    name: enterprise.name,
+    email: enterprise.email,
+    profile: ROLES.ENTERPRISE,
+    enterprise_id: enterprise.id,
+  };
+};
+
+const hasPassword = (account, password) =>
+  Boolean(account?.password) && bcrypt.compareSync(password, account.password);
+
+const authenticate = (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.redirect(LOGIN_PATH);
+  }
+
+  Promise.all([
+    User.findOne({ where: { email }, include: [Profile] }),
+    Enterprise.findOne({ where: { email } }),
+  ])
+    .then(([user, enterprise]) => {
+      const userRole = normalizeRole(getProfileName(user));
+      const userIsValid = Boolean(userRole) && hasPassword(user, password);
+      const enterpriseIsValid =
+        Boolean(enterprise?.is_active) && hasPassword(enterprise, password);
+
+      if (userIsValid) {
+        createUserSession(req, user);
+        return res.redirect("/");
+      }
+
+      if (enterpriseIsValid) {
+        createEnterpriseSession(req, enterprise);
+        return res.redirect("/");
+      }
+
+      return res.redirect(LOGIN_PATH);
+    })
+    .catch((error) => {
+      console.log(error);
+      res.redirect(LOGIN_PATH);
+    });
+};
+
+router.get("/admin/users", authorize(PERMISSIONS.USER_PANEL, { loginPath: LOGIN_PATH }), (req, res) => {
   User.findAll().then((users) => {
     res.render("admin/users/index", { users: users });
   });
 });
 
-const adminOnly = authorize(PERMISSIONS.MANAGE_USERS, {
-  loginPath: "/admin/login",
+const manageUsersAuth = authorize(PERMISSIONS.MANAGE_USERS, {
+  loginPath: LOGIN_PATH,
 });
 
-router.get("/admin/users/create", adminOnly, (req, res) => {
+router.get("/admin/users/create", manageUsersAuth, (req, res) => {
   Promise.all([Enterprise.findAll(), Profile.findAll()])
     .then(([enterprises, profiles]) => {
       res.render("admin/users/create", {
@@ -30,7 +94,7 @@ router.get("/admin/users/create", adminOnly, (req, res) => {
     });
 });
 
-router.post("/users/create", adminOnly, (req, res) => {
+router.post("/users/create", manageUsersAuth, (req, res) => {
   let name = req.body.name;
   let email = req.body.email;
   let password = req.body.password;
@@ -70,44 +134,16 @@ router.post("/users/create", adminOnly, (req, res) => {
 });
 
 router.get("/login", (req, res) => {
-  res.redirect("/student/login");
+  res.render("login");
 });
+
+router.post("/auth", authenticate);
 
 router.get("/admin/login", (req, res) => {
-  res.render("admin/users/login");
+  res.redirect(LOGIN_PATH);
 });
 
-router.post("/admin/auth", (req, res) => {
-  let email = req.body.email;
-  let password = req.body.password;
-
-  User.findOne({ where: { email: email }, include: [Profile] })
-    .then((user) => {
-      const correct =
-        Boolean(user) &&
-        normalizeRole(user.profile.name) === ROLES.ADMIN &&
-        bcrypt.compareSync(password, user.password);
-      const authActions = {
-        true: () => {
-          req.session.user = {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            profile: ROLES.ADMIN,
-            enterprise_id: user.enterprise_id,
-          };
-          return res.redirect("/");
-        },
-        false: () => res.redirect("/admin/login"),
-      };
-
-      return authActions[correct]();
-    })
-    .catch((error) => {
-      console.log(error);
-      res.redirect("/admin/login");
-    });
-});
+router.post("/admin/auth", authenticate);
 
 router.get("/logout", (req, res) => {
   req.session.user = undefined;

@@ -2,9 +2,9 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const Enterprise = require("./Enterprise");
-const { authorize, PERMISSIONS, ROLES } = require("../middleware/rbac");
+const { authorize, PERMISSIONS } = require("../middleware/rbac");
 const enterprisePanelAuth = authorize(PERMISSIONS.ENTERPRISE_PANEL, {
-  loginPath: "/enterprise/login",
+  loginPath: "/login",
 });
 
 router.get("/admin/enterprises/new", enterprisePanelAuth, (req, res) => {
@@ -148,39 +148,11 @@ router.post("/admin/enterprises/delete", enterprisePanelAuth, (req, res) => {
 });
 
 router.get("/enterprise/login", (req, res) => {
-  res.render("enterprise-login");
+  res.redirect("/login");
 });
 
 router.post("/enterprise/auth", (req, res) => {
-  let email = req.body.email;
-  let password = req.body.password;
-
-  Enterprise.findOne({ where: { email: email } })
-    .then((enterprise) => {
-      const correct =
-        Boolean(enterprise) &&
-        enterprise.is_active &&
-        bcrypt.compareSync(password, enterprise.password);
-      const authActions = {
-        true: () => {
-          req.session.user = {
-            id: enterprise.id,
-            name: enterprise.name,
-            email: enterprise.email,
-            profile: ROLES.ENTERPRISE,
-            enterprise_id: enterprise.id,
-          };
-          return res.redirect("/");
-        },
-        false: () => res.redirect("/enterprise/login"),
-      };
-
-      return authActions[correct]();
-    })
-    .catch((error) => {
-      console.log(error);
-      res.redirect("/enterprise/login");
-    });
+  res.redirect(307, "/auth");
 });
 
 router.get("/enterprise/register", (req, res) => {
@@ -215,7 +187,7 @@ router.post("/enterprise/register", (req, res) => {
       is_active: true,
     })
       .then(() => {
-        res.redirect("/enterprise/login");
+        res.redirect("/login");
       })
       .catch((error) => {
         console.log(error);

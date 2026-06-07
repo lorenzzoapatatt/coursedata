@@ -4,7 +4,7 @@ const Course = require("./Course");
 const slugify = require("slugify");
 const { authorize, PERMISSIONS } = require("../middleware/rbac");
 const coursePanelAuth = authorize(PERMISSIONS.COURSE_PANEL, {
-  loginPath: "/professor/login",
+  loginPath: "/login",
 });
 
 router.get("/admin/courses/new", coursePanelAuth, (req, res) => {

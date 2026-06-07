@@ -6,7 +6,7 @@ const Enterprise = require("../enterprises/Enterprise");
 const Profile = require("../profiles/Profile");
 const User = require("../users/User");
 const Student = require("./Student");
-const { normalizeRole, ROLES } = require("../middleware/rbac");
+const { ROLES } = require("../middleware/rbac");
 
 const hashPassword = (password) =>
   bcrypt.hashSync(password, bcrypt.genSaltSync(10));
@@ -14,45 +14,12 @@ const hashPassword = (password) =>
 const getStudentProfile = () =>
   Profile.findOne({ where: { name: { [Op.in]: [ROLES.STUDENT, "user"] } } });
 
-const isStudent = (user) => normalizeRole(user?.profile?.name) === ROLES.STUDENT;
-
-const createStudentSession = (req, user) => {
-  req.session.user = {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    profile: ROLES.STUDENT,
-    enterprise_id: user.enterprise_id,
-  };
-};
-
 router.get("/student/login", (req, res) => {
-  res.render("student-login");
+  res.redirect("/login");
 });
 
 router.post("/student/auth", (req, res) => {
-  const { email, password } = req.body;
-
-  User.findOne({ where: { email }, include: [Profile] })
-    .then((user) => {
-      const correct =
-        Boolean(user) &&
-        isStudent(user) &&
-        bcrypt.compareSync(password, user.password);
-      const authActions = {
-        true: () => {
-          createStudentSession(req, user);
-          return res.redirect("/");
-        },
-        false: () => res.redirect("/student/login"),
-      };
-
-      return authActions[correct]();
-    })
-    .catch((error) => {
-      console.log(error);
-      res.redirect("/student/login");
-    });
+  res.redirect(307, "/auth");
 });
 
 router.get("/student/register", (req, res) => {
@@ -86,7 +53,7 @@ router.post("/student/register", (req, res) => {
             Student.create({
               user_id: user.id,
             }),
-          ).then(() => res.redirect("/student/login")),
+          ).then(() => res.redirect("/login")),
       };
 
       const actionKey =
