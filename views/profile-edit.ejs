@@ -1,0 +1,101 @@
+<%- include('partials/header'); %>
+<%- include('partials/navbar'); %>
+
+<main class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="h4 mb-0">Edit profile</h1>
+                </div>
+                <div class="card-body">
+                    <% if (error) { %>
+                        <div class="alert alert-danger"><%= error %></div>
+                    <% } %>
+
+                    <form action="/profile/edit" method="post">
+                        <div class="row g-4">
+                            <% if (canEditPhoto) { %>
+                                <div class="col-md-4">
+                                    <div class="d-flex flex-column align-items-start gap-3">
+                                        <img id="profilePhotoPreview" src="<%= profilePhoto %>" alt="Profile photo" class="profile-photo-preview">
+                                        <div class="w-100">
+                                            <label for="profilePhotoFile" class="form-label">Photo</label>
+                                            <input id="profilePhotoFile" type="file" class="form-control" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml">
+                                            <input id="profilePhotoData" type="hidden" name="profile_photo">
+                                        </div>
+                                        <div class="form-check">
+                                            <input id="removePhoto" class="form-check-input" type="checkbox" name="remove_photo">
+                                            <label class="form-check-label" for="removePhoto">Remove photo</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% } %>
+
+                            <div class="<%= canEditPhoto ? 'col-md-8' : 'col-12' %>">
+                                <label for="name" class="form-label">Name</label>
+                                <input id="name" name="name" type="text" class="form-control mb-3" value="<%= account.name %>" required>
+
+                                <label for="email" class="form-label">Email</label>
+                                <input id="email" name="email" type="email" class="form-control mb-3" value="<%= account.email %>" required>
+
+                                <label for="phone" class="form-label">Phone</label>
+                                <input id="phone" name="phone" type="text" class="form-control mb-3" value="<%= account.phone %>" required>
+
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                    <a href="/profile/info" class="btn btn-outline-secondary">Cancel</a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<% if (canEditPhoto) { %>
+    <script>
+        const profilePhotoFile = document.getElementById("profilePhotoFile");
+        const profilePhotoData = document.getElementById("profilePhotoData");
+        const profilePhotoPreview = document.getElementById("profilePhotoPreview");
+        const removePhoto = document.getElementById("removePhoto");
+        const defaultProfilePhoto = "/images/user-profile-photo.svg";
+        const maxPhotoSize = 2 * 1024 * 1024;
+
+        profilePhotoFile.addEventListener("change", () => {
+            const file = profilePhotoFile.files[0];
+
+            if (!file) {
+                profilePhotoData.value = "";
+                return;
+            }
+
+            if (file.size > maxPhotoSize) {
+                profilePhotoFile.value = "";
+                profilePhotoData.value = "";
+                alert("Imagem muito grande");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.addEventListener("load", () => {
+                profilePhotoData.value = reader.result;
+                profilePhotoPreview.src = reader.result;
+                removePhoto.checked = false;
+            });
+            reader.readAsDataURL(file);
+        });
+
+        removePhoto.addEventListener("change", () => {
+            if (removePhoto.checked) {
+                profilePhotoFile.value = "";
+                profilePhotoData.value = "";
+                profilePhotoPreview.src = defaultProfilePhoto;
+            }
+        });
+    </script>
+<% } %>
+
+<%- include('partials/footer'); %>

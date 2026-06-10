@@ -31,8 +31,41 @@
               <a href="<%= link.href %>" class="nav-link"><%= link.label %></a>
             </li>
           <% }) %>
-          <li class="nav-item">
-            <a href="/logout" class="nav-link">Logout</a>
+          <% const profilePhoto = user.profile_photo || "/images/user-profile-photo.svg"; %>
+          <li class="nav-item dropdown ms-lg-2">
+            <button
+              class="btn dropdown-toggle profile-menu-toggle d-flex align-items-center p-0"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <img
+                src="<%= profilePhoto %>"
+                alt="Profile photo"
+                class="navbar-profile-photo"
+              >
+              <span class="visually-hidden">Profile menu</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end profile-dropdown-menu">
+              <li class="px-3 py-2">
+                <div class="d-flex align-items-center gap-3">
+                  <img
+                    src="<%= profilePhoto %>"
+                    alt="Profile photo"
+                    class="navbar-profile-photo profile-dropdown-photo"
+                  >
+                  <div class="text-truncate">
+                    <div class="fw-semibold text-truncate"><%= user.name %></div>
+                    <small class="text-muted text-truncate d-block"><%= user.email %></small>
+                  </div>
+                </div>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="/profile/info">Info</a></li>
+              <li><a class="dropdown-item" href="/profile/edit">Edit</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="/logout">Logout</a></li>
+            </ul>
           </li>
         <% } else { %>
           <li class="nav-item">

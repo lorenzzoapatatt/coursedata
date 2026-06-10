@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const session = require("express-session");
+const { DataTypes } = require("sequelize");
 const app = express();
 const connection = require("./database/database");
 const { canAccess, getAllowedPanelLinks, PERMISSIONS } = require("./middleware/rbac");
@@ -30,8 +31,8 @@ app.use(
 
 app.use(express.static("public"));
 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false, limit: "5mb" }));
+app.use(bodyParser.json({ limit: "5mb" }));
 
 app.use((req, res, next) => {
   const user = req.session.user;
@@ -49,6 +50,17 @@ connection
   .then(() => {
     console.log("Database connected");
     return connection.sync();
+  })
+  .then(async () => {
+    const queryInterface = connection.getQueryInterface();
+    const userTable = await queryInterface.describeTable("users");
+
+    if (!userTable.profile_photo) {
+      await queryInterface.addColumn("users", "profile_photo", {
+        type: DataTypes.TEXT("long"),
+        allowNull: true,
+      });
+    }
   })
   .then(() => {
     console.log("Database synced");

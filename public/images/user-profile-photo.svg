@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Default profile photo</title>
+  <desc id="desc">Circular default avatar with a person silhouette.</desc>
+  <rect width="256" height="256" rx="128" fill="#f1f3f5"/>
+  <circle cx="128" cy="96" r="44" fill="#adb5bd"/>
+  <path d="M48 218c10-44 42-70 80-70s70 26 80 70" fill="#adb5bd"/>
+  <path d="M48 218c10-44 42-70 80-70s70 26 80 70" fill="none" stroke="#868e96" stroke-width="4" stroke-linecap="round"/>
+</svg>

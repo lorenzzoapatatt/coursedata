@@ -30,6 +30,10 @@ const User = connection.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    profile_photo: {
+      type: DataTypes.TEXT("long"),
+      allowNull: true,
+    },
     is_active: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
