@@ -34,3 +34,72 @@
   width: 128px;
   height: 128px;
 }
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+.app-sidebar {
+  flex: 0 0 240px;
+  width: 240px;
+  min-height: 100vh;
+  padding: 1rem;
+  background: #fff;
+  border-right: 1px solid #dee2e6;
+}
+
+.app-sidebar-brand {
+  min-height: 64px;
+}
+
+.app-logo {
+  width: 160px;
+  max-width: 100%;
+  height: auto;
+}
+
+.app-sidebar .btn-toggle {
+  width: 100%;
+  text-align: left;
+}
+
+.app-sidebar .btn-toggle:hover,
+.app-sidebar .btn-toggle:focus {
+  background: #eef7fb;
+  color: #0b7285;
+}
+
+.app-sidebar .btn-toggle-nav a {
+  display: block;
+  padding: .375rem .75rem;
+  text-decoration: none;
+}
+
+.app-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.app-main > .navbar {
+  margin-bottom: 0 !important;
+}
+
+.app-content {
+  padding: 1.5rem;
+}
+
+@media (max-width: 767.98px) {
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .app-sidebar {
+    flex: 0 0 auto;
+    width: 100%;
+    min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid #dee2e6;
+  }
+}
