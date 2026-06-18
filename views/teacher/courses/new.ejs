@@ -1,0 +1,32 @@
+<%- include('../../partials/header'); %>
+
+<div class="course-name-stage">
+  <form class="course-name-card" method="POST" action="/teacher/courses">
+    <p class="builder-eyebrow">Name your course</p>
+    <h1>Name your course</h1>
+    <p class="text-muted mb-4">
+      What would you like to name your course? You can always change this later.
+    </p>
+
+    <div class="mb-3">
+      <label class="form-label" for="title">Course title</label>
+      <input
+        class="form-control form-control-lg"
+        id="title"
+        name="title"
+        type="text"
+        placeholder="e.g. Advanced Web Development"
+        required
+        autofocus
+      >
+      <div class="form-text">What will you teach in this course?</div>
+    </div>
+
+    <div class="d-flex gap-2 align-items-center">
+      <a class="btn btn-link text-dark text-decoration-none" href="/teacher/courses">Cancel</a>
+      <button class="btn btn-dark" type="submit">Continue</button>
+    </div>
+  </form>
+</div>
+
+<%- include('../../partials/footer'); %>

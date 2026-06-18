@@ -30,7 +30,7 @@ const ACCESS_RULES = Object.freeze({
 const PANEL_LINKS = Object.freeze([
   { href: "/admin/users", label: "Users", permission: PERMISSIONS.USER_PANEL },
   {
-    href: "/admin/courses",
+    href: "/teacher/courses",
     label: "Courses",
     permission: PERMISSIONS.COURSE_PANEL,
   },

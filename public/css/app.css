@@ -103,3 +103,506 @@
     border-bottom: 1px solid #dee2e6;
   }
 }
+
+.course-builder-shell {
+  background: #f4f6f8;
+}
+
+.course-builder-shell .navbar {
+  margin-bottom: 0;
+}
+
+.course-workspace {
+  color: #17202a;
+}
+
+.course-page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.course-page-head h1,
+.course-name-card h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.builder-eyebrow {
+  margin: 0 0 .25rem;
+  color: #0f6f85;
+  font-size: .8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.builder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: .5rem;
+}
+
+.builder-panel,
+.builder-card,
+.access-settings-panel {
+  background: #fff;
+  border: 1px solid #d9e0e7;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+
+.builder-panel {
+  padding: 1rem;
+}
+
+.course-filter-bar {
+  display: grid;
+  grid-template-columns: minmax(14rem, 1fr) minmax(10rem, 14rem) auto;
+  align-items: end;
+  gap: .75rem;
+  margin-bottom: 1rem;
+}
+
+.filter-search {
+  min-width: 0;
+}
+
+.course-table {
+  margin: 0;
+  table-layout: fixed;
+}
+
+.course-table th {
+  color: #516070;
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.course-table td {
+  vertical-align: middle;
+}
+
+.course-title-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: .75rem;
+}
+
+.course-title-link {
+  display: block;
+  color: #17202a;
+  font-weight: 700;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.course-title-link:hover {
+  color: #0f6f85;
+}
+
+.course-title-cell small {
+  color: #6b7785;
+}
+
+.course-thumb {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #cbd5df;
+  background: #edf3f7;
+}
+
+.course-thumb-empty {
+  display: inline-block;
+}
+
+.description-cell {
+  max-width: 18rem;
+  color: #516070;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.5rem;
+  min-height: 1.55rem;
+  padding: .2rem .55rem;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #0f172a;
+  background: #e9eef4;
+  border: 1px solid transparent;
+}
+
+.status-published {
+  color: #075e45;
+  background: #dff7ee;
+  border-color: #b9ebd6;
+}
+
+.status-draft {
+  color: #63470f;
+  background: #fff2cf;
+  border-color: #f3d88d;
+}
+
+.status-archived {
+  color: #5a6470;
+  background: #eceff3;
+  border-color: #d7dde4;
+}
+
+.status-free {
+  min-width: 3rem;
+  color: #0f4c81;
+  background: #dcefff;
+  border-color: #b8dcfb;
+}
+
+.empty-state {
+  display: grid;
+  gap: .2rem;
+  padding: 1rem;
+  color: #6b7785;
+  background: #f7f9fb;
+  border: 1px dashed #cbd5df;
+  border-radius: 8px;
+}
+
+.empty-state strong {
+  color: #243140;
+}
+
+.course-name-stage {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 2rem;
+  background: #f7f9fb;
+}
+
+.course-name-card {
+  width: min(100%, 36rem);
+  padding: 2rem;
+  background: #fff;
+  border: 1px solid #d9e0e7;
+  border-radius: 8px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, .08);
+}
+
+.builder-grid {
+  display: grid;
+  grid-template-columns: minmax(18rem, 1fr) minmax(20rem, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.builder-column {
+  display: grid;
+  gap: .85rem;
+}
+
+.builder-column h2,
+.builder-section-head h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.builder-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.builder-card {
+  padding: 1rem;
+}
+
+.compact-card {
+  padding: .85rem;
+}
+
+.input-with-action {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .5rem;
+}
+
+.rich-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  margin-bottom: .5rem;
+}
+
+.rich-toolbar button {
+  min-width: 2.25rem;
+  min-height: 2rem;
+  padding: .25rem .55rem;
+  color: #243140;
+  background: #eef3f7;
+  border: 1px solid #cbd5df;
+  border-radius: 6px;
+  font-size: .85rem;
+  font-weight: 700;
+}
+
+.rich-toolbar button:hover {
+  background: #dcefff;
+  border-color: #8ec7ef;
+}
+
+.rich-editor {
+  min-height: 9rem;
+  padding: .75rem;
+  background: #fbfcfd;
+  border: 1px solid #cbd5df;
+  border-radius: 6px;
+}
+
+.rich-editor:focus,
+.rich-editor .ProseMirror:focus {
+  outline: 2px solid rgba(15, 111, 133, .22);
+  outline-offset: 2px;
+}
+
+.rich-editor .ProseMirror {
+  min-height: 7.5rem;
+  outline: 0;
+}
+
+.image-card {
+  display: grid;
+  gap: .75rem;
+}
+
+.course-image-drop {
+  display: grid;
+  min-height: 16rem;
+  place-items: center;
+  overflow: hidden;
+  background: #f7f9fb;
+  border: 1px solid #cbd5df;
+  border-radius: 8px;
+}
+
+.course-image-drop img {
+  width: 100%;
+  height: 100%;
+  max-height: 22rem;
+  object-fit: cover;
+}
+
+.image-placeholder {
+  display: grid;
+  width: 100%;
+  min-height: 9rem;
+  place-items: center;
+  padding: 1rem;
+  color: #516070;
+  text-align: center;
+  background: #eef3f7;
+  border-radius: 6px;
+}
+
+.chapter-list {
+  display: grid;
+  gap: .45rem;
+  padding: .75rem;
+  background: #fff;
+  border: 1px solid #d9e0e7;
+  border-radius: 8px;
+}
+
+.chapter-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: .55rem;
+  min-height: 3rem;
+  padding: .5rem .65rem;
+  background: #eaf6fd;
+  border: 1px solid #d7ecfa;
+  border-radius: 6px;
+}
+
+.chapter-row.dragging {
+  opacity: .55;
+}
+
+.drag-handle {
+  color: #0f6f85;
+  font-weight: 800;
+  cursor: grab;
+}
+
+.chapter-row-main {
+  min-width: 0;
+}
+
+.chapter-row-main a {
+  display: block;
+  color: #17202a;
+  font-weight: 700;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.chapter-row-main small,
+.drag-note {
+  color: #6b7785;
+  font-size: .78rem;
+}
+
+.chapter-edit-link {
+  color: #0f6f85;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.builder-save-button {
+  justify-self: start;
+  min-width: 9rem;
+}
+
+.danger-icon-button {
+  background: #111827;
+  border-color: #111827;
+}
+
+.access-settings-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.access-settings-panel p {
+  margin: .25rem 0 0;
+  color: #6b7785;
+  font-size: .88rem;
+}
+
+.video-card {
+  display: grid;
+  gap: .85rem;
+}
+
+.video-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.video-preview {
+  display: grid;
+  min-height: 14rem;
+  place-items: center;
+  overflow: hidden;
+  background: #f7f9fb;
+  border: 1px solid #cbd5df;
+  border-radius: 8px;
+}
+
+.video-preview video,
+.video-preview mux-player {
+  width: 100%;
+  max-height: 22rem;
+  background: #000;
+}
+
+.video-preview mux-player {
+  aspect-ratio: 16 / 9;
+  min-height: 18rem;
+}
+
+.mux-upload-box {
+  width: 100%;
+  min-height: 18rem;
+  padding: 1rem;
+}
+
+.mux-upload-box mux-uploader {
+  display: block;
+  width: 100%;
+  min-height: 16rem;
+  --overlay-background-color: #f5f8fb;
+  --overlay-border-radius: 8px;
+  --progress-bar-fill-color: #0f6f85;
+  --button-background-color: #0f6f85;
+  --button-border-radius: 6px;
+}
+
+.mux-upload-help {
+  margin: 0;
+  color: #6b7785;
+  font-size: .9rem;
+}
+
+.mux-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem;
+}
+
+@media (max-width: 991.98px) {
+  .course-filter-bar,
+  .builder-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .course-page-head,
+  .builder-actions,
+  .builder-section-head,
+  .access-settings-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .builder-actions {
+    width: 100%;
+  }
+
+  .builder-actions form,
+  .builder-actions .btn,
+  .builder-actions button {
+    width: 100%;
+  }
+
+  .chapter-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .chapter-row .status-pill,
+  .chapter-edit-link {
+    justify-self: start;
+    grid-column: 2;
+  }
+
+  .mux-grid,
+  .input-with-action {
+    grid-template-columns: 1fr;
+  }
+}

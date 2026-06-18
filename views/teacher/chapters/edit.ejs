@@ -1,0 +1,176 @@
+<%- include('../../partials/header'); %>
+
+<div class="app-shell course-builder-shell">
+  <% if (user) { %>
+    <%- include('../../partials/sidebar'); %>
+  <% } %>
+
+  <div class="app-main">
+    <%- include('../../partials/navbar'); %>
+
+    <main class="app-content course-workspace">
+      <% const nextChapterStatus = chapter.status === 'published' ? 'draft' : 'published'; %>
+      <div class="course-page-head">
+        <div>
+          <p class="builder-eyebrow">Create chapter</p>
+          <h1>Chapter creation</h1>
+          <span class="text-muted"><%= course.title %></span>
+        </div>
+
+        <div class="builder-actions">
+          <a class="btn btn-outline-dark" href="/teacher/courses/<%= course.id %>/edit">Back to course</a>
+          <form method="POST" action="/teacher/courses/<%= course.id %>/chapters/<%= chapter.id %>/status">
+            <input type="hidden" name="status" value="<%= nextChapterStatus %>">
+            <button class="btn btn-outline-dark" type="submit">
+              <%= chapter.status === 'published' ? 'Unpublish' : 'Publish' %>
+            </button>
+          </form>
+          <form
+            method="POST"
+            action="/teacher/courses/<%= course.id %>/chapters/<%= chapter.id %>/delete"
+            onsubmit="confirmDelete(event, this)"
+          >
+            <button class="btn btn-dark danger-icon-button" type="submit">Delete</button>
+          </form>
+        </div>
+      </div>
+
+      <form
+        id="chapter-main-form"
+        method="POST"
+        action="/teacher/courses/<%= course.id %>/chapters/<%= chapter.id %>/update"
+        class="builder-grid"
+      >
+        <section class="builder-column">
+          <h2>Customize your chapter</h2>
+
+          <div class="builder-card compact-card">
+            <label class="form-label" for="chapter-title">Chapter title</label>
+            <div class="input-with-action">
+              <input
+                id="chapter-title"
+                class="form-control"
+                name="title"
+                value="<%= chapter.title %>"
+                required
+              >
+              <button class="btn btn-outline-dark" type="button" data-focus-target="#chapter-title">
+                Edit
+              </button>
+            </div>
+          </div>
+
+          <div class="builder-card">
+            <label class="form-label" for="chapter-description-input">Chapter Description</label>
+            <textarea
+              id="chapter-description-input"
+              class="d-none"
+              name="description"
+            ><%= chapter.description || '' %></textarea>
+            <div class="rich-toolbar" data-rich-toolbar="#chapter-description-editor">
+              <button type="button" data-editor-command="paragraph">Normal</button>
+              <button type="button" data-editor-command="bold">B</button>
+              <button type="button" data-editor-command="italic">I</button>
+              <button type="button" data-editor-command="underline">U</button>
+              <button type="button" data-editor-command="link">Link</button>
+              <button type="button" data-editor-command="orderedList">1.</button>
+              <button type="button" data-editor-command="bulletList">List</button>
+              <button type="button" data-editor-command="clearFormat">Tx</button>
+              <button type="button" data-editor-command="undo">Undo</button>
+            </div>
+            <div
+              id="chapter-description-editor"
+              class="rich-editor"
+              data-rich-editor
+              data-input="#chapter-description-input"
+            ></div>
+          </div>
+
+          <h2 class="mt-4">Access settings</h2>
+          <div class="access-settings-panel">
+            <div>
+              <strong>Free Preview Chapter</strong>
+              <p>Check this box if you want to make this chapter free for preview.</p>
+            </div>
+            <div class="form-check form-switch">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="is-free-preview"
+                name="is_free_preview"
+                <%= chapter.is_free_preview ? 'checked' : '' %>
+              >
+              <label class="form-check-label" for="is-free-preview">Free preview</label>
+            </div>
+          </div>
+        </section>
+
+        <section class="builder-column">
+          <h2>Add a video</h2>
+
+          <div
+            class="builder-card video-card"
+            data-mux-upload-card
+            data-upload-url="/teacher/courses/<%= course.id %>/chapters/<%= chapter.id %>/mux-upload"
+            data-status-url="/teacher/courses/<%= course.id %>/chapters/<%= chapter.id %>/mux-status"
+            data-playback-id="<%= chapter.mux_playback_id || '' %>"
+            data-upload-status="<%= chapter.mux_upload_status || '' %>"
+          >
+            <div class="video-card-head">
+              <label class="form-label mb-0">Chapter video</label>
+              <button class="btn btn-link text-dark text-decoration-none p-0" type="button" data-reset-mux-upload>
+                Edit video
+              </button>
+            </div>
+
+            <div class="video-preview" data-mux-video-frame>
+              <% if (chapter.mux_playback_id) { %>
+                <mux-player
+                  playback-id="<%= chapter.mux_playback_id %>"
+                  metadata-video-title="<%= chapter.title %>"
+                  accent-color="#0f6f85"
+                ></mux-player>
+              <% } else { %>
+                <div class="mux-upload-box">
+                  <mux-uploader
+                    id="chapter-video-uploader"
+                    locale="en"
+                    type="bar"
+                    dynamic-chunk-size
+                    use-large-file-workaround
+                  ></mux-uploader>
+                </div>
+              <% } %>
+            </div>
+
+            <p class="mux-upload-help" data-mux-status>
+              <% if (chapter.mux_playback_id) { %>
+                Video ready for students.
+              <% } else if (chapter.mux_upload_status) { %>
+                Mux status: <%= chapter.mux_upload_status %>
+              <% } else { %>
+                Choose files or drag and drop. Upload this chapter's video.
+              <% } %>
+            </p>
+          </div>
+
+          <button class="btn btn-dark builder-save-button" type="submit">Save chapter</button>
+        </section>
+      </form>
+    </main>
+  </div>
+</div>
+
+<script src="/vendor/mux-uploader/mux-uploader.js"></script>
+<script src="/vendor/mux-player/mux-player.js"></script>
+<script src="/js/course-editor.js"></script>
+<script>
+  function confirmDelete(event, form) {
+    event.preventDefault();
+    if (confirm("Do you want to delete this chapter?")) {
+      form.submit();
+    }
+  }
+</script>
+
+<%- include('../../partials/footer'); %>

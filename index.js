@@ -2,9 +2,12 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const session = require("express-session");
 const { DataTypes } = require("sequelize");
+const path = require("path");
 const app = express();
 const connection = require("./database/database");
 const { canAccess, getAllowedPanelLinks, PERMISSIONS } = require("./middleware/rbac");
+const ensureCourseSchema = require("./database/ensureCourseSchema");
+const ensureChapterSchema = require("./database/ensureChapterSchema");
 
 const courseController = require("./courses/CourseController");
 const userController = require("./users/UserController");
@@ -13,6 +16,7 @@ const studentController = require("./students/StudentController");
 const professorController = require("./professors/ProfessorController");
 
 require("./courses/Course");
+require("./chapters/Chapter");
 require("./users/User");
 require("./enterprises/Enterprise");
 require("./students/Student");
@@ -30,6 +34,14 @@ app.use(
 );
 
 app.use(express.static("public"));
+app.use(
+  "/vendor/mux-uploader",
+  express.static(path.join(__dirname, "node_modules/@mux/mux-uploader/dist")),
+);
+app.use(
+  "/vendor/mux-player",
+  express.static(path.join(__dirname, "node_modules/@mux/mux-player/dist")),
+);
 
 app.use(bodyParser.urlencoded({ extended: false, limit: "5mb" }));
 app.use(bodyParser.json({ limit: "5mb" }));
@@ -61,6 +73,9 @@ connection
         allowNull: true,
       });
     }
+
+    await ensureCourseSchema();
+    await ensureChapterSchema();
   })
   .then(() => {
     console.log("Database synced");

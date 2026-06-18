@@ -1,0 +1,222 @@
+<%- include('../../partials/header'); %>
+
+<div class="app-shell course-builder-shell">
+  <% if (user) { %>
+    <%- include('../../partials/sidebar'); %>
+  <% } %>
+
+  <div class="app-main">
+    <%- include('../../partials/navbar'); %>
+
+    <main class="app-content course-workspace">
+      <% const nextCourseStatus = course.status === 'published' ? 'draft' : 'published'; %>
+      <div class="course-page-head">
+        <div>
+          <p class="builder-eyebrow">Create courses</p>
+          <h1>Course Setup</h1>
+          <span class="text-muted">Complete all fields</span>
+        </div>
+
+        <div class="builder-actions">
+          <form method="POST" action="/teacher/courses/<%= course.id %>/status">
+            <input type="hidden" name="status" value="<%= nextCourseStatus %>">
+            <button class="btn btn-outline-dark" type="submit">
+              <%= course.status === 'published' ? 'Unpublish' : 'Publish' %>
+            </button>
+          </form>
+          <form method="POST" action="/courses/delete" onsubmit="confirmDelete(event, this)">
+            <input type="hidden" name="id" value="<%= course.id %>">
+            <button class="btn btn-dark danger-icon-button" type="submit">Delete</button>
+          </form>
+        </div>
+      </div>
+
+      <form
+        id="course-main-form"
+        method="POST"
+        action="/teacher/courses/<%= course.id %>/update"
+        class="builder-grid"
+      >
+        <section class="builder-column">
+          <h2>Customize your course</h2>
+
+          <div class="builder-card compact-card">
+            <label class="form-label" for="course-title">Course title</label>
+            <div class="input-with-action">
+              <input
+                id="course-title"
+                class="form-control"
+                name="title"
+                value="<%= course.title %>"
+                required
+              >
+              <button class="btn btn-outline-dark" type="button" data-focus-target="#course-title">
+                Edit
+              </button>
+            </div>
+          </div>
+
+          <div class="builder-card">
+            <label class="form-label" for="course-description-input">Course Description</label>
+            <textarea
+              id="course-description-input"
+              class="d-none"
+              name="description"
+            ><%= course.description || '' %></textarea>
+            <div class="rich-toolbar" data-rich-toolbar="#course-description-editor">
+              <button type="button" data-editor-command="paragraph">Normal</button>
+              <button type="button" data-editor-command="bold">B</button>
+              <button type="button" data-editor-command="italic">I</button>
+              <button type="button" data-editor-command="underline">U</button>
+              <button type="button" data-editor-command="link">Link</button>
+              <button type="button" data-editor-command="orderedList">1.</button>
+              <button type="button" data-editor-command="bulletList">List</button>
+              <button type="button" data-editor-command="clearFormat">Tx</button>
+              <button type="button" data-editor-command="undo">Undo</button>
+            </div>
+            <div
+              id="course-description-editor"
+              class="rich-editor"
+              data-rich-editor
+              data-input="#course-description-input"
+            ></div>
+          </div>
+
+          <div class="builder-card image-card">
+            <label class="form-label" for="course-image-file">Course Image</label>
+            <input id="course-image" type="hidden" name="image" value="<%= course.image || '' %>">
+            <div class="course-image-drop">
+              <% if (course.image) { %>
+                <img id="course-image-preview" src="<%= course.image %>" alt="Course image preview">
+              <% } else { %>
+                <div id="course-image-preview" class="image-placeholder">
+                  Put here the image of the course
+                </div>
+              <% } %>
+            </div>
+            <input
+              id="course-image-file"
+              class="form-control"
+              type="file"
+              accept="image/*"
+              data-image-input="#course-image"
+              data-image-preview="#course-image-preview"
+            >
+            <div class="form-text">Images are saved in the course record as a data URL for now.</div>
+          </div>
+        </section>
+
+        <section class="builder-column">
+          <div class="builder-section-head">
+            <h2>Course chapters</h2>
+            <button
+              class="btn btn-outline-dark"
+              type="submit"
+              form="new-chapter-form"
+            >
+              Add a chapter
+            </button>
+          </div>
+
+          <div
+            class="chapter-list"
+            data-reorder-url="/teacher/courses/<%= course.id %>/chapters/reorder"
+          >
+            <% if (chapters.length === 0) { %>
+              <div class="empty-state">
+                <strong>No chapters yet.</strong>
+                <span>Add the first chapter to start building this course.</span>
+              </div>
+            <% } %>
+
+            <% chapters.forEach((chapter) => { %>
+              <article class="chapter-row" draggable="true" data-chapter-id="<%= chapter.id %>">
+                <span class="drag-handle">::</span>
+                <div class="chapter-row-main">
+                  <a href="/teacher/courses/<%= course.id %>/chapters/<%= chapter.id %>/edit">
+                    <%= chapter.title %>
+                  </a>
+                  <small>Position <%= chapter.position %></small>
+                </div>
+                <% if (chapter.is_free_preview) { %>
+                  <span class="status-pill status-free">Free</span>
+                <% } %>
+                <span class="status-pill status-<%= chapter.status %>">
+                  <%= chapter.status.charAt(0).toUpperCase() + chapter.status.slice(1) %>
+                </span>
+                <a class="chapter-edit-link" href="/teacher/courses/<%= course.id %>/chapters/<%= chapter.id %>/edit">
+                  Edit
+                </a>
+              </article>
+            <% }) %>
+          </div>
+          <p class="drag-note">Drag and drop to reorder chapters.</p>
+
+          <h2 class="mt-4">Sell your course</h2>
+          <div class="builder-card compact-card">
+            <label class="form-label" for="course-price">Course price</label>
+            <div class="input-with-action">
+              <input
+                id="course-price"
+                class="form-control"
+                type="number"
+                name="price"
+                step="0.01"
+                min="0"
+                value="<%= course.price || 0 %>"
+              >
+              <button class="btn btn-outline-dark" type="button" data-focus-target="#course-price">
+                Edit
+              </button>
+            </div>
+          </div>
+
+          <div class="builder-card compact-card">
+            <label class="form-label" for="course-workload">Workload hours</label>
+            <input
+              id="course-workload"
+              class="form-control"
+              type="number"
+              name="workload_hours"
+              min="0"
+              value="<%= course.workload_hours || 0 %>"
+            >
+          </div>
+
+          <h2 class="mt-4">Resource attachments</h2>
+          <div class="builder-card compact-card">
+            <label class="form-label" for="course-attachments">Course attachments</label>
+            <input
+              id="course-attachments"
+              class="form-control"
+              name="attachments"
+              value="<%= course.attachments || '' %>"
+              placeholder="Attachment URL or reference"
+            >
+          </div>
+
+          <button class="btn btn-dark builder-save-button" type="submit">Save course</button>
+        </section>
+      </form>
+
+      <form
+        id="new-chapter-form"
+        method="POST"
+        action="/teacher/courses/<%= course.id %>/chapters"
+        class="d-none"
+      ></form>
+    </main>
+  </div>
+</div>
+
+<script src="/js/course-editor.js"></script>
+<script>
+  function confirmDelete(event, form) {
+    event.preventDefault();
+    if (confirm("Do you want to delete this course?")) {
+      form.submit();
+    }
+  }
+</script>
+
+<%- include('../../partials/footer'); %>

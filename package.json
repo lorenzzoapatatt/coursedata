@@ -10,6 +10,13 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@mux/mux-node": "^14.1.1",
+    "@mux/mux-player": "^3.13.0",
+    "@mux/mux-uploader": "^1.5.0",
+    "@tiptap/core": "^3.26.1",
+    "@tiptap/extension-link": "^3.26.1",
+    "@tiptap/extension-underline": "^3.26.1",
+    "@tiptap/starter-kit": "^3.26.1",
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.2",
     "ejs": "^5.0.2",
