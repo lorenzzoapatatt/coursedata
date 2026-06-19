@@ -1,3 +1,5 @@
+require("dotenv").config({ quiet: true });
+
 const express = require("express");
 const bodyParser = require("body-parser");
 const session = require("express-session");
@@ -26,7 +28,7 @@ app.set("view engine", "ejs");
 
 app.use(
   session({
-    secret: "Naometoque1371626",
+    secret: process.env.SESSION_SECRET || "change-me-in-env",
     resave: false,
     saveUninitialized: false,
     cookie: { maxAge: 30000000 },
