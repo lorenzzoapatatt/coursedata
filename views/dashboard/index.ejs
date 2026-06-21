@@ -2,14 +2,7 @@
 
 <main class="dashboard-page">
   <% const profilePhoto = user?.profile_photo || '/images/user-profile-photo.svg'; %>
-  <% const hasFilters = Boolean(filters.q || filters.category); %>
-  <% const buildDashboardHref = (category) => {
-    const params = new URLSearchParams();
-    if (filters.q) params.set('q', filters.q);
-    if (category) params.set('category', category);
-    const query = params.toString();
-    return query ? `/dashboard?${query}` : '/dashboard';
-  }; %>
+  <% const hasFilters = Boolean(filters.q); %>
 
   <header class="dashboard-topbar">
     <form class="dashboard-search" method="GET" action="/dashboard">
@@ -21,9 +14,6 @@
         placeholder="Search for a course"
         aria-label="Search for a course"
       >
-      <% if (filters.category) { %>
-        <input type="hidden" name="category" value="<%= filters.category %>">
-      <% } %>
     </form>
 
     <div class="dashboard-user-actions">
@@ -46,31 +36,12 @@
     </div>
   </section>
 
-  <nav class="course-category-tabs" aria-label="Course categories">
-    <a
-      class="category-chip <%= filters.category ? '' : 'active' %>"
-      href="<%= buildDashboardHref('') %>"
-    >
-      <span>A</span>
-      All
-    </a>
-    <% categories.forEach((category) => { %>
-      <a
-        class="category-chip <%= filters.category === category.name ? 'active' : '' %>"
-        href="<%= buildDashboardHref(category.name) %>"
-      >
-        <span><%= category.icon %></span>
-        <%= category.name %>
-      </a>
-    <% }) %>
-  </nav>
-
   <% if (courses.length === 0) { %>
     <section class="dashboard-empty-state">
       <strong>No courses found.</strong>
       <span>
         <% if (hasFilters) { %>
-          Try another search or category.
+          Try another search.
         <% } else { %>
           Courses from your company will appear here when they are available.
         <% } %>

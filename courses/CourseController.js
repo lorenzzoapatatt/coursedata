@@ -37,13 +37,6 @@ const truncateText = (value, maxLength) => normalizeText(value).slice(0, maxLeng
 const normalizeCourseCategory = (value) =>
   truncateText(value, 80) || DEFAULT_COURSE_CATEGORY;
 
-const getCategoryIcon = (category) =>
-  normalizeCourseCategory(category)
-    .split(/\s+/)
-    .map((word) => word.charAt(0).toUpperCase())
-    .join("")
-    .slice(0, 2) || "G";
-
 const toInteger = (value, fallback = 0) => {
   const parsed = Number.parseInt(value, 10);
   return Number.isNaN(parsed) ? fallback : parsed;
@@ -284,7 +277,6 @@ const decorateCourse = (course) => {
     title,
     name: plain.name || title,
     category: normalizeCourseCategory(plain.category),
-    category_icon: getCategoryIcon(plain.category),
     workload_hours: getCourseWorkload(plain),
     status,
     description_text: stripHtml(plain.description),
@@ -423,7 +415,6 @@ const getDashboardCourseWhere = (req) =>
 
 const getDashboardFilters = (query) => ({
   q: normalizeText(query.q),
-  category: normalizeText(query.category),
 });
 
 const applyDashboardFilters = (where, filters) => {
@@ -438,50 +429,24 @@ const applyDashboardFilters = (where, filters) => {
     ];
   }
 
-  if (filters.category) {
-    nextWhere.category = filters.category;
-  }
-
   return nextWhere;
-};
-
-const getDashboardCategories = async (where) => {
-  const rows = await Course.findAll({
-    attributes: ["category"],
-    where,
-    group: ["category"],
-    order: [["category", "ASC"]],
-  });
-
-  const uniqueCategories = new Set(
-    rows.map((row) => normalizeCourseCategory(row.category)),
-  );
-
-  return [...uniqueCategories].map((category) => ({
-    name: category,
-    icon: getCategoryIcon(category),
-  }));
 };
 
 const renderDashboard = async (req, res) => {
   const filters = getDashboardFilters(req.query);
   const baseWhere = getDashboardCourseWhere(req);
-  const [courses, categories] = await Promise.all([
-    Course.findAll({
-      where: applyDashboardFilters(baseWhere, filters),
-      include: [{ model: Chapter, as: "chapters" }],
-      order: [
-        ["updated_at", "DESC"],
-        ["id", "DESC"],
-      ],
-    }),
-    getDashboardCategories(baseWhere),
-  ]);
+  const courses = await Course.findAll({
+    where: applyDashboardFilters(baseWhere, filters),
+    include: [{ model: Chapter, as: "chapters" }],
+    order: [
+      ["updated_at", "DESC"],
+      ["id", "DESC"],
+    ],
+  });
   const decoratedCourses = courses.map(decorateCourse);
 
   return res.render("dashboard/index", {
     courses: decoratedCourses,
-    categories,
     filters,
     totalCourses: decoratedCourses.length,
     totalChapters: decoratedCourses.reduce(
