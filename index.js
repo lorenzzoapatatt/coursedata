@@ -45,8 +45,8 @@ app.use(
   express.static(path.join(__dirname, "node_modules/@mux/mux-player/dist")),
 );
 
-app.use(bodyParser.urlencoded({ extended: false, limit: "5mb" }));
-app.use(bodyParser.json({ limit: "5mb" }));
+app.use(bodyParser.urlencoded({ extended: false, limit: "20mb" }));
+app.use(bodyParser.json({ limit: "20mb" }));
 
 app.use((req, res, next) => {
   const user = req.session.user;
@@ -105,6 +105,10 @@ connection
   });
 
 app.get("/", (req, res) => {
+  if (req.session?.user) {
+    return res.redirect("/dashboard");
+  }
+
   res.render("index");
 });
 

@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const Enterprise = require("./Enterprise");
-const { authorize, PERMISSIONS } = require("../middleware/rbac");
+const { authorize, PERMISSIONS, ROLES } = require("../middleware/rbac");
 const enterprisePanelAuth = authorize(PERMISSIONS.ENTERPRISE_PANEL, {
   loginPath: "/login",
 });
@@ -186,8 +186,17 @@ router.post("/enterprise/register", (req, res) => {
       phone: phone,
       is_active: true,
     })
-      .then(() => {
-        res.redirect("/login");
+      .then((enterprise) => {
+        req.session.user = {
+          id: enterprise.id,
+          name: enterprise.name,
+          email: enterprise.email,
+          profile: ROLES.ENTERPRISE,
+          enterprise_id: enterprise.id,
+          profile_photo: "/images/user-profile-photo.svg",
+        };
+
+        res.redirect("/dashboard");
       })
       .catch((error) => {
         console.log(error);

@@ -42,6 +42,12 @@ const ensureCourseSchema = async () => {
     allowNull: false,
   });
 
+  await addMissingColumn(queryInterface, courseTable, "category", {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "General",
+  });
+
   await addMissingColumn(queryInterface, courseTable, "workload_hours", {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -113,6 +119,7 @@ const ensureCourseSchema = async () => {
     SET
       title = COALESCE(NULLIF(title, ''), NULLIF(name, ''), CONCAT('Course ', id)),
       description = COALESCE(description, ''),
+      category = COALESCE(NULLIF(category, ''), 'General'),
       workload_hours = COALESCE(NULLIF(workload_hours, 0), workload, 0),
       name = COALESCE(NULLIF(name, ''), NULLIF(title, ''), CONCAT('Course ', id)),
       workload = COALESCE(workload, workload_hours, 0),

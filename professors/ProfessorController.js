@@ -53,8 +53,19 @@ router.post("/professor/register", (req, res) => {
             Professor.create({
               user_id: user.id,
               bio,
+            }).then(() => {
+              req.session.user = {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                profile: ROLES.PROFESSOR,
+                enterprise_id: user.enterprise_id,
+                profile_photo: "/images/user-profile-photo.svg",
+              };
+
+              return res.redirect("/dashboard");
             }),
-          ).then(() => res.redirect("/login")),
+          ),
       };
 
       const actionKey =

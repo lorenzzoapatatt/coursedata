@@ -28,6 +28,11 @@ const ACCESS_RULES = Object.freeze({
 });
 
 const PANEL_LINKS = Object.freeze([
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+    permission: PERMISSIONS.AUTHENTICATED,
+  },
   { href: "/admin/users", label: "Users", permission: PERMISSIONS.USER_PANEL },
   {
     href: "/teacher/courses",

@@ -7,14 +7,23 @@ const Chapter = require("../chapters/Chapter");
 const Enterprise = require("../enterprises/Enterprise");
 const Professor = require("../professors/Professor");
 const muxVideo = require("../services/muxVideo");
-const { authorize, PERMISSIONS, ROLES } = require("../middleware/rbac");
+const { authorize, canAccess, PERMISSIONS, ROLES } = require("../middleware/rbac");
 
 const coursePanelAuth = authorize(PERMISSIONS.COURSE_PANEL, {
+  loginPath: "/login",
+});
+const dashboardAuth = authorize(PERMISSIONS.AUTHENTICATED, {
   loginPath: "/login",
 });
 
 const COURSE_STATUSES = ["draft", "published", "archived"];
 const CHAPTER_STATUSES = ["draft", "published"];
+const DEFAULT_COURSE_CATEGORY = "General";
+const MAX_ATTACHMENT_RESOURCES = 20;
+const MAX_ATTACHMENT_DATA_URL_LENGTH = 9 * 1024 * 1024;
+const SAFE_LINK_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
+const DATA_URL_PATTERN = /^data:[^,]*;base64,[A-Za-z0-9+/=]+$/;
+const FILE_NAME_PATTERN = /\.(pdf|docx?|pptx?|xlsx?|csv|txt|zip|jpe?g|png|gif|webp)$/i;
 
 const normalizeText = (value) => (value || "").toString().trim();
 
@@ -22,6 +31,18 @@ const normalizeOptionalText = (value) => {
   const text = normalizeText(value);
   return text || null;
 };
+
+const truncateText = (value, maxLength) => normalizeText(value).slice(0, maxLength);
+
+const normalizeCourseCategory = (value) =>
+  truncateText(value, 80) || DEFAULT_COURSE_CATEGORY;
+
+const getCategoryIcon = (category) =>
+  normalizeCourseCategory(category)
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase())
+    .join("")
+    .slice(0, 2) || "G";
 
 const toInteger = (value, fallback = 0) => {
   const parsed = Number.parseInt(value, 10);
@@ -62,19 +83,214 @@ const getCourseSlug = (title) =>
     strict: true,
   });
 
+const getAttachmentId = (value, index, type) => {
+  const safeId = normalizeText(value)
+    .replace(/[^a-z0-9_-]/gi, "")
+    .slice(0, 64);
+
+  return safeId || `${type}-${index + 1}`;
+};
+
+const getUrlWithProtocol = (value) => {
+  const url = normalizeText(value);
+
+  if (!url) return null;
+
+  if (/^[a-z][a-z0-9+.-]*:/i.test(url)) return url;
+  if (FILE_NAME_PATTERN.test(url) && !url.includes("/")) return null;
+  if (!url.includes(".") && !url.toLowerCase().startsWith("www.")) return null;
+
+  return `https://${url}`;
+};
+
+const normalizeExternalUrl = (value) => {
+  const url = getUrlWithProtocol(value);
+
+  if (!url) return null;
+
+  try {
+    const parsedUrl = new URL(url);
+    return SAFE_LINK_PROTOCOLS.has(parsedUrl.protocol) ? parsedUrl.toString() : null;
+  } catch (error) {
+    return null;
+  }
+};
+
+const normalizeAttachmentFileUrl = (value) => {
+  const url = normalizeText(value);
+
+  if (!url || url.length > MAX_ATTACHMENT_DATA_URL_LENGTH) return null;
+
+  return DATA_URL_PATTERN.test(url) ? url : null;
+};
+
+const normalizeAttachmentResource = (resource, index) => {
+  if (!resource) return null;
+
+  if (typeof resource === "string") {
+    const url = normalizeExternalUrl(resource);
+
+    if (url) {
+      return {
+        id: getAttachmentId(resource, index, "link"),
+        type: "link",
+        title: truncateText(resource, 160),
+        url,
+      };
+    }
+
+    return {
+      id: getAttachmentId(resource, index, "note"),
+      type: "note",
+      title: truncateText(resource, 160),
+      text: truncateText(resource, 500),
+    };
+  }
+
+  const type = normalizeText(resource.type).toLowerCase();
+
+  if (type === "file") {
+    const url = normalizeAttachmentFileUrl(resource.url || resource.dataUrl || resource.href);
+
+    if (!url) return null;
+
+    const fileName = truncateText(
+      resource.fileName || resource.filename || resource.name || resource.title || "course-file",
+      180,
+    );
+    const title = truncateText(resource.title || fileName, 160);
+    const mimeType = truncateText(resource.mimeType || resource.contentType || "", 100);
+    const size = Math.max(0, toInteger(resource.size, 0));
+
+    return {
+      id: getAttachmentId(resource.id || fileName, index, "file"),
+      type: "file",
+      title,
+      fileName,
+      mimeType,
+      size,
+      url,
+    };
+  }
+
+  if (type === "note") {
+    const text = truncateText(resource.text || resource.title || "", 500);
+
+    if (!text) return null;
+
+    return {
+      id: getAttachmentId(resource.id || text, index, "note"),
+      type: "note",
+      title: truncateText(resource.title || text, 160),
+      text,
+    };
+  }
+
+  const url = normalizeExternalUrl(resource.url || resource.href);
+
+  if (!url) return null;
+
+  return {
+    id: getAttachmentId(resource.id || url, index, "link"),
+    type: "link",
+    title: truncateText(resource.title || resource.name || url, 160),
+    url,
+  };
+};
+
+const parseLegacyAttachments = (text) =>
+  text
+    .split(/\r?\n/)
+    .map((line) => normalizeText(line))
+    .filter(Boolean)
+    .map((line, index) => normalizeAttachmentResource(line, index));
+
+const normalizeAttachmentResources = (resources) =>
+  resources
+    .map((resource, index) => normalizeAttachmentResource(resource, index))
+    .filter(Boolean)
+    .slice(0, MAX_ATTACHMENT_RESOURCES);
+
+const parseCourseAttachments = (value) => {
+  const text = normalizeOptionalText(value);
+
+  if (!text) return [];
+
+  try {
+    const parsed = JSON.parse(text);
+    const resources = Array.isArray(parsed) ? parsed : [parsed];
+    return normalizeAttachmentResources(resources);
+  } catch (error) {
+    return parseLegacyAttachments(text).slice(0, MAX_ATTACHMENT_RESOURCES);
+  }
+};
+
+const normalizeAttachmentsInput = (value) => {
+  const resources = parseCourseAttachments(value);
+  return resources.length ? JSON.stringify(resources) : null;
+};
+
+const formatBytes = (size) => {
+  const bytes = Number(size || 0);
+
+  if (!bytes) return "";
+
+  if (bytes < 1024) return `${bytes} B`;
+
+  const units = ["KB", "MB", "GB"];
+  let value = bytes / 1024;
+  let unitIndex = 0;
+
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+
+  return `${value.toFixed(value >= 10 ? 0 : 1)} ${units[unitIndex]}`;
+};
+
+const decorateAttachmentResource = (resource) => {
+  if (resource.type === "file") {
+    return {
+      ...resource,
+      label: "File",
+      meta: [formatBytes(resource.size), resource.mimeType].filter(Boolean).join(" - "),
+    };
+  }
+
+  if (resource.type === "note") {
+    return {
+      ...resource,
+      label: "Reference",
+      meta: "Saved reference",
+    };
+  }
+
+  return {
+    ...resource,
+    label: "Link",
+    meta: resource.url,
+  };
+};
+
 const decorateCourse = (course) => {
   const plain = typeof course.get === "function" ? course.get({ plain: true }) : course;
   const title = getCourseTitle(plain);
   const status = normalizeStatus(plain.status);
+  const attachmentResources = parseCourseAttachments(plain.attachments);
 
   return {
     ...plain,
     title,
     name: plain.name || title,
+    category: normalizeCourseCategory(plain.category),
+    category_icon: getCategoryIcon(plain.category),
     workload_hours: getCourseWorkload(plain),
     status,
     description_text: stripHtml(plain.description),
     chapters_count: plain.chapters?.length || 0,
+    attachment_resources: attachmentResources.map(decorateAttachmentResource),
+    attachments_count: attachmentResources.length,
   };
 };
 
@@ -115,12 +331,13 @@ const buildCoursePayload = (body, options = {}) => {
     title,
     name: title,
     description: body.description || "",
+    category: normalizeCourseCategory(body.category),
     workload_hours: workloadHours,
     workload: workloadHours,
     image: normalizeOptionalText(body.image),
     price: toDecimal(body.price, 0),
     slug: getCourseSlug(title),
-    attachments: normalizeOptionalText(body.attachments),
+    attachments: normalizeAttachmentsInput(body.attachments),
   };
 
   if (options.includeStatus) {
@@ -184,6 +401,97 @@ const findCourseOrRedirect = async (id, res, redirectPath = "/teacher/courses") 
   return course;
 };
 
+const getScopedCourseWhere = (req, options = {}) => {
+  const sessionUser = req.session?.user;
+  const where = {};
+
+  if (sessionUser?.profile !== ROLES.ADMIN && sessionUser?.enterprise_id) {
+    where.enterprise_id = sessionUser.enterprise_id;
+  }
+
+  if (options.publishedOnly) {
+    where.status = "published";
+  }
+
+  return where;
+};
+
+const getDashboardCourseWhere = (req) =>
+  getScopedCourseWhere(req, {
+    publishedOnly: !canAccess(req.session?.user, PERMISSIONS.COURSE_PANEL),
+  });
+
+const getDashboardFilters = (query) => ({
+  q: normalizeText(query.q),
+  category: normalizeText(query.category),
+});
+
+const applyDashboardFilters = (where, filters) => {
+  const nextWhere = { ...where };
+
+  if (filters.q) {
+    nextWhere[Op.or] = [
+      { title: { [Op.like]: `%${filters.q}%` } },
+      { name: { [Op.like]: `%${filters.q}%` } },
+      { description: { [Op.like]: `%${filters.q}%` } },
+      { category: { [Op.like]: `%${filters.q}%` } },
+    ];
+  }
+
+  if (filters.category) {
+    nextWhere.category = filters.category;
+  }
+
+  return nextWhere;
+};
+
+const getDashboardCategories = async (where) => {
+  const rows = await Course.findAll({
+    attributes: ["category"],
+    where,
+    group: ["category"],
+    order: [["category", "ASC"]],
+  });
+
+  const uniqueCategories = new Set(
+    rows.map((row) => normalizeCourseCategory(row.category)),
+  );
+
+  return [...uniqueCategories].map((category) => ({
+    name: category,
+    icon: getCategoryIcon(category),
+  }));
+};
+
+const renderDashboard = async (req, res) => {
+  const filters = getDashboardFilters(req.query);
+  const baseWhere = getDashboardCourseWhere(req);
+  const [courses, categories] = await Promise.all([
+    Course.findAll({
+      where: applyDashboardFilters(baseWhere, filters),
+      include: [{ model: Chapter, as: "chapters" }],
+      order: [
+        ["updated_at", "DESC"],
+        ["id", "DESC"],
+      ],
+    }),
+    getDashboardCategories(baseWhere),
+  ]);
+  const decoratedCourses = courses.map(decorateCourse);
+
+  return res.render("dashboard/index", {
+    courses: decoratedCourses,
+    categories,
+    filters,
+    totalCourses: decoratedCourses.length,
+    totalChapters: decoratedCourses.reduce(
+      (sum, course) => sum + Number(course.chapters_count || 0),
+      0,
+    ),
+    canManageCourses: canAccess(req.session?.user, PERMISSIONS.COURSE_PANEL),
+  });
+};
+
 const renderCoursesIndex = async (req, res) => {
   const q = normalizeText(req.query.q);
   const status = normalizeText(req.query.status);
@@ -194,6 +502,7 @@ const renderCoursesIndex = async (req, res) => {
       { title: { [Op.like]: `%${q}%` } },
       { name: { [Op.like]: `%${q}%` } },
       { description: { [Op.like]: `%${q}%` } },
+      { category: { [Op.like]: `%${q}%` } },
     ];
   }
 
@@ -221,6 +530,13 @@ router.get("/teacher/courses", coursePanelAuth, (req, res) => {
   renderCoursesIndex(req, res).catch((error) => {
     console.error(error);
     res.status(500).send("Erro ao buscar cursos");
+  });
+});
+
+router.get("/dashboard", dashboardAuth, (req, res) => {
+  renderDashboard(req, res).catch((error) => {
+    console.error(error);
+    res.status(500).send("Erro ao carregar dashboard");
   });
 });
 
@@ -305,6 +621,50 @@ router.get("/teacher/courses/:id/edit", coursePanelAuth, async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.redirect("/teacher/courses");
+  }
+});
+
+router.get("/courses/:id", dashboardAuth, async (req, res) => {
+  const id = req.params.id;
+
+  if (Number.isNaN(Number(id))) {
+    return res.status(404).send("Curso nao encontrado");
+  }
+
+  try {
+    const courseWhere = {
+      ...getDashboardCourseWhere(req),
+      id,
+    };
+    const [course, chapters] = await Promise.all([
+      Course.findOne({ where: courseWhere }),
+      Chapter.findAll({
+        where: { course_id: id },
+        order: [
+          ["position", "ASC"],
+          ["id", "ASC"],
+        ],
+      }),
+    ]);
+
+    if (!course) {
+      return res.status(404).send("Curso nao encontrado");
+    }
+
+    const canPreviewDraft = canAccess(req.session?.user, PERMISSIONS.COURSE_PANEL);
+
+    const visibleChapters = canPreviewDraft
+      ? chapters
+      : chapters.filter((chapter) => normalizeStatus(chapter.status) === "published");
+
+    return res.render("courses/show", {
+      course: decorateCourse(course),
+      chapters: visibleChapters,
+      canPreviewDraft,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("Erro ao carregar curso");
   }
 });
 

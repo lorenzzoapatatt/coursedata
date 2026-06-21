@@ -109,12 +109,12 @@ const authenticate = (req, res) => {
 
       if (userIsValid) {
         createUserSession(req, user);
-        return res.redirect("/");
+        return res.redirect("/dashboard");
       }
 
       if (enterpriseIsValid) {
         createEnterpriseSession(req, enterprise);
-        return res.redirect("/");
+        return res.redirect("/dashboard");
       }
 
       return res.redirect(LOGIN_PATH);

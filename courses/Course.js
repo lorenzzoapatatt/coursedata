@@ -27,6 +27,11 @@ const Course = connection.define(
       type: DataTypes.TEXT("long"),
       allowNull: false,
     },
+    category: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "General",
+    },
     workload_hours: {
       type: DataTypes.INTEGER,
       allowNull: false,

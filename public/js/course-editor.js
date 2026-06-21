@@ -1,6 +1,9 @@
 (function () {
   const MAX_INLINE_IMAGE_SIZE = 4 * 1024 * 1024;
+  const MAX_ATTACHMENT_FILE_SIZE = 6 * 1024 * 1024;
+  const MAX_ATTACHMENT_PAYLOAD_SIZE = 16 * 1024 * 1024;
   const TIPTAP_VERSION = "3.26.1";
+  const SAFE_ATTACHMENT_PROTOCOLS = ["http:", "https:", "mailto:"];
 
   const getInputForEditor = (editorElement) => {
     const selector = editorElement.dataset.input;
@@ -394,11 +397,254 @@
     });
   };
 
+  const parseAttachmentResources = (value) => {
+    if (!value) return [];
+
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+    } catch (error) {
+      return [];
+    }
+  };
+
+  const createAttachmentId = (type) =>
+    `${type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+  const formatBytes = (size) => {
+    const bytes = Number(size || 0);
+
+    if (!bytes) return "";
+    if (bytes < 1024) return `${bytes} B`;
+
+    const units = ["KB", "MB", "GB"];
+    let value = bytes / 1024;
+    let unitIndex = 0;
+
+    while (value >= 1024 && unitIndex < units.length - 1) {
+      value /= 1024;
+      unitIndex += 1;
+    }
+
+    return `${value.toFixed(value >= 10 ? 0 : 1)} ${units[unitIndex]}`;
+  };
+
+  const getAttachmentTitle = (resource) =>
+    resource.title || resource.fileName || resource.filename || resource.name || resource.url || "Resource";
+
+  const getAttachmentMeta = (resource) => {
+    if (resource.type === "file") {
+      return [formatBytes(resource.size), resource.mimeType || resource.contentType]
+        .filter(Boolean)
+        .join(" - ");
+    }
+
+    if (resource.type === "note") {
+      return resource.text || "Saved reference";
+    }
+
+    return resource.url || "External link";
+  };
+
+  const getAttachmentUrlWithProtocol = (value) => {
+    const url = String(value || "").trim();
+
+    if (!url) return "";
+
+    return /^[a-z][a-z0-9+.-]*:/i.test(url) ? url : `https://${url}`;
+  };
+
+  const normalizeAttachmentLink = (value) => {
+    const url = getAttachmentUrlWithProtocol(value);
+
+    try {
+      const parsed = new URL(url);
+      return SAFE_ATTACHMENT_PROTOCOLS.includes(parsed.protocol) ? parsed.toString() : "";
+    } catch (error) {
+      return "";
+    }
+  };
+
+  const readFileAsDataUrl = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.addEventListener("load", () => resolve(reader.result));
+      reader.addEventListener("error", () => reject(reader.error));
+      reader.readAsDataURL(file);
+    });
+
+  const canStoreAttachmentResource = (resources, nextResource) => {
+    const nextValue = JSON.stringify([...resources, nextResource]);
+    return nextValue.length <= MAX_ATTACHMENT_PAYLOAD_SIZE;
+  };
+
+  const syncAttachmentStore = (store, resources) => {
+    store.value = JSON.stringify(resources);
+  };
+
+  const renderAttachmentList = (manager, resources, onRemove) => {
+    const list = manager.querySelector("[data-attachment-list]");
+    if (!list) return;
+
+    list.replaceChildren();
+
+    if (resources.length === 0) {
+      const emptyState = document.createElement("div");
+      emptyState.className = "empty-state attachment-empty";
+
+      const title = document.createElement("strong");
+      title.textContent = "No resources yet.";
+
+      const text = document.createElement("span");
+      text.textContent = "Add files or links for students to download or open.";
+
+      emptyState.append(title, text);
+      list.appendChild(emptyState);
+      return;
+    }
+
+    resources.forEach((resource, index) => {
+      const row = document.createElement("article");
+      row.className = "attachment-row";
+
+      const icon = document.createElement("span");
+      icon.className = `attachment-icon attachment-icon-${resource.type || "link"}`;
+      icon.textContent = resource.type === "file" ? "F" : resource.type === "note" ? "R" : "L";
+
+      const content = document.createElement("div");
+      content.className = "attachment-row-main";
+
+      const titleElement = resource.url
+        ? document.createElement("a")
+        : document.createElement("span");
+      titleElement.textContent = getAttachmentTitle(resource);
+
+      if (resource.url) {
+        titleElement.href = resource.url;
+
+        if (resource.type === "file") {
+          titleElement.download = resource.fileName || resource.filename || getAttachmentTitle(resource);
+        } else {
+          titleElement.target = "_blank";
+          titleElement.rel = "noopener";
+        }
+      }
+
+      const meta = document.createElement("small");
+      meta.textContent = getAttachmentMeta(resource);
+
+      content.append(titleElement, meta);
+
+      const removeButton = document.createElement("button");
+      removeButton.className = "btn btn-sm btn-link attachment-remove";
+      removeButton.type = "button";
+      removeButton.textContent = "Remove";
+      removeButton.addEventListener("click", () => onRemove(index));
+
+      row.append(icon, content, removeButton);
+      list.appendChild(row);
+    });
+  };
+
+  const initAttachmentManagers = () => {
+    document.querySelectorAll("[data-attachment-manager]").forEach((manager) => {
+      const store = manager.querySelector("[data-attachment-store]");
+      const fileInput = manager.querySelector("[data-attachment-file-input]");
+      const addFileButton = manager.querySelector("[data-add-attachment-file]");
+      const addLinkButton = manager.querySelector("[data-add-attachment-link]");
+
+      if (!store) return;
+
+      let resources = parseAttachmentResources(store.value);
+
+      const syncAndRender = () => {
+        syncAttachmentStore(store, resources);
+        renderAttachmentList(manager, resources, (index) => {
+          resources = resources.filter((_, resourceIndex) => resourceIndex !== index);
+          syncAndRender();
+        });
+      };
+
+      addLinkButton?.addEventListener("click", () => {
+        const rawUrl = window.prompt("Paste the resource link URL");
+        const url = normalizeAttachmentLink(rawUrl);
+
+        if (!rawUrl) return;
+
+        if (!url) {
+          alert("Use a valid http, https, or mailto link.");
+          return;
+        }
+
+        const title =
+          window.prompt("Resource title", rawUrl.replace(/^https?:\/\//i, "")) ||
+          rawUrl.replace(/^https?:\/\//i, "");
+        const resource = {
+          id: createAttachmentId("link"),
+          type: "link",
+          title: title.trim() || url,
+          url,
+        };
+
+        if (!canStoreAttachmentResource(resources, resource)) {
+          alert("This course already has too much attachment data. Use a link for large files.");
+          return;
+        }
+
+        resources = [...resources, resource];
+        syncAndRender();
+      });
+
+      addFileButton?.addEventListener("click", () => {
+        fileInput?.click();
+      });
+
+      fileInput?.addEventListener("change", async () => {
+        const files = Array.from(fileInput.files || []);
+
+        for (const file of files) {
+          if (file.size > MAX_ATTACHMENT_FILE_SIZE) {
+            alert(`${file.name} is too large. Use files up to 6MB or add it as a link.`);
+            continue;
+          }
+
+          try {
+            const dataUrl = await readFileAsDataUrl(file);
+            const resource = {
+              id: createAttachmentId("file"),
+              type: "file",
+              title: file.name,
+              fileName: file.name,
+              mimeType: file.type || "application/octet-stream",
+              size: file.size,
+              url: dataUrl,
+            };
+
+            if (!canStoreAttachmentResource(resources, resource)) {
+              alert("This course already has too much attachment data. Use a link for large files.");
+              continue;
+            }
+
+            resources = [...resources, resource];
+          } catch (error) {
+            alert(`Could not add ${file.name}.`);
+          }
+        }
+
+        fileInput.value = "";
+        syncAndRender();
+      });
+
+      syncAndRender();
+    });
+  };
+
   document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll("[data-rich-editor]").forEach(initRichEditor);
     initImageInputs();
     initFocusButtons();
     initChapterReorder();
     initMuxUploaders();
+    initAttachmentManagers();
   });
 })();

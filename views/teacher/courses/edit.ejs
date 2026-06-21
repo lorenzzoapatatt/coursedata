@@ -18,6 +18,9 @@
         </div>
 
         <div class="builder-actions">
+          <a class="btn btn-outline-dark" href="/courses/<%= course.id %>" target="_blank" rel="noopener">
+            Preview
+          </a>
           <form method="POST" action="/teacher/courses/<%= course.id %>/status">
             <input type="hidden" name="status" value="<%= nextCourseStatus %>">
             <button class="btn btn-outline-dark" type="submit">
@@ -51,6 +54,22 @@
                 required
               >
               <button class="btn btn-outline-dark" type="button" data-focus-target="#course-title">
+                Edit
+              </button>
+            </div>
+          </div>
+
+          <div class="builder-card compact-card">
+            <label class="form-label" for="course-category">Course category</label>
+            <div class="input-with-action">
+              <input
+                id="course-category"
+                class="form-control"
+                name="category"
+                value="<%= course.category || 'General' %>"
+                placeholder="Engineering, Photography, Music"
+              >
+              <button class="btn btn-outline-dark" type="button" data-focus-target="#course-category">
                 Edit
               </button>
             </div>
@@ -184,15 +203,35 @@
           </div>
 
           <h2 class="mt-4">Resource attachments</h2>
-          <div class="builder-card compact-card">
-            <label class="form-label" for="course-attachments">Course attachments</label>
-            <input
+          <div class="builder-card attachment-card" data-attachment-manager>
+            <div class="attachment-card-head">
+              <label class="form-label mb-0" for="course-attachments">Course attachments</label>
+              <div class="attachment-actions">
+                <button class="btn btn-sm btn-outline-dark" type="button" data-add-attachment-link>
+                  Add link
+                </button>
+                <button class="btn btn-sm btn-outline-dark" type="button" data-add-attachment-file>
+                  Add a file
+                </button>
+              </div>
+            </div>
+            <textarea
               id="course-attachments"
-              class="form-control"
+              class="d-none"
               name="attachments"
-              value="<%= course.attachments || '' %>"
-              placeholder="Attachment URL or reference"
+              data-attachment-store
+            ><%= JSON.stringify(course.attachment_resources || []) %></textarea>
+            <input
+              class="d-none"
+              type="file"
+              multiple
+              data-attachment-file-input
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.csv,.txt,.zip,image/*,audio/*,video/*"
             >
+            <div class="attachment-list" data-attachment-list></div>
+            <div class="form-text">
+              Add downloadable files or external links. Use links for large books or videos.
+            </div>
           </div>
 
           <button class="btn btn-dark builder-save-button" type="submit">Save course</button>
