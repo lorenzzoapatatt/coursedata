@@ -626,6 +626,7 @@ router.get("/courses/:id", dashboardAuth, async (req, res) => {
       course: decorateCourse(course),
       chapters: visibleChapters,
       canPreviewDraft,
+      selectedChapterId: req.query.chapter || req.query.lecture || null,
     });
   } catch (error) {
     console.error(error);

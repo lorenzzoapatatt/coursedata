@@ -1,0 +1,96 @@
+<%
+  const sidebarChapters = typeof visibleChapters !== "undefined" ? visibleChapters : [];
+  const activeSidebarChapter = typeof selectedChapter !== "undefined" ? selectedChapter : null;
+  const canShowDraftChapters = typeof canPreviewDraft !== "undefined" && canPreviewDraft;
+  const sidebarFormatDuration = (seconds) => {
+    const totalSeconds = Number(seconds || 0);
+    if (!totalSeconds) return "";
+
+    const minutes = Math.floor(totalSeconds / 60);
+    const remainingSeconds = totalSeconds % 60;
+
+    if (minutes < 60) {
+      return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+    }
+
+    const hours = Math.floor(minutes / 60);
+    const restMinutes = minutes % 60;
+
+    return `${hours}h ${restMinutes.toString().padStart(2, "0")}m`;
+  };
+%>
+
+<aside class="sidebarcourse" data-sidebarcourse>
+  <div class="sidebarcourse-head">
+    <div>
+      <span>Conteudo do curso</span>
+      <strong><%= sidebarChapters.length %> capitulos</strong>
+    </div>
+    <button
+      class="sidebarcourse-toggle"
+      type="button"
+      aria-label="Ocultar painel lateral"
+      aria-expanded="true"
+      data-sidebar-toggle
+    >
+      &times;
+    </button>
+  </div>
+
+  <div class="sidebarcourse-list">
+    <% if (sidebarChapters.length) { %>
+      <% sidebarChapters.forEach((chapter, index) => { %>
+        <%
+          const isActive =
+            activeSidebarChapter && Number(chapter.id) === Number(activeSidebarChapter.id);
+          const chapterDuration = sidebarFormatDuration(chapter.duration_seconds);
+          const chapterProgress = Math.round(((index + 1) / sidebarChapters.length) * 100);
+        %>
+        <button
+          class="sidebarcourse-item <%= isActive ? 'is-active' : '' %>"
+          type="button"
+          data-public-chapter
+          data-chapter-id="<%= chapter.id %>"
+          data-chapter-index="<%= index + 1 %>"
+          data-chapter-total="<%= sidebarChapters.length %>"
+          data-progress="<%= chapterProgress %>"
+          data-playback-id="<%= chapter.mux_playback_id || '' %>"
+          data-chapter-title="<%= chapter.title %>"
+          data-free-preview="<%= chapter.is_free_preview ? 'true' : 'false' %>"
+        >
+          <span class="sidebarcourse-number"><%= index + 1 %></span>
+          <span class="sidebarcourse-item-body">
+            <strong><%= chapter.title %></strong>
+            <small>
+              <%= chapter.mux_playback_id ? "Video disponivel" : "Sem video" %>
+              <% if (chapterDuration) { %>
+                <span><%= chapterDuration %></span>
+              <% } %>
+              <% if (canShowDraftChapters && chapter.status !== "published") { %>
+                <span>Rascunho</span>
+              <% } %>
+            </small>
+          </span>
+        </button>
+
+        <template data-chapter-description-template="<%= chapter.id %>">
+          <%- chapter.description || "<p>O conteudo desta aula sera publicado em breve.</p>" %>
+        </template>
+      <% }) %>
+    <% } else { %>
+      <div class="lesson-empty-state sidebarcourse-empty">
+        <strong>Sem capitulos publicados.</strong>
+        <span>Volte mais tarde para assistir as aulas.</span>
+      </div>
+    <% } %>
+  </div>
+</aside>
+
+<button
+  class="sidebarcourse-restore course-player-hidden"
+  type="button"
+  data-sidebar-restore
+  aria-label="Mostrar painel lateral"
+>
+  Conteudo
+</button>

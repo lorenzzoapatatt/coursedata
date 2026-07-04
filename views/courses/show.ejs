@@ -4,8 +4,83 @@
   <%- include('../partials/navbar'); %>
 
   <main class="container app-content">
-        <h1><%= course.title %></h1>
+    <%
+      const visibleChapters = chapters || [];
+      const selectedChapter =
+        visibleChapters.find((chapter) => Number(chapter.id) === Number(course.chapter_id)) ||
+        visibleChapters.find((chapter) => chapter.mux_playback_id) ||
+        visibleChapters[0] ||
+        null;
+      const playableChapter =
+        selectedChapter?.mux_playback_id
+          ? selectedChapter
+          : visibleChapters.find((chapter) => chapter.mux_playback_id) || null;
+    %>
+
+    <section class="public-course-hero">
+      
+
+      <div class="public-course-media">
+        <% if (playableChapter) { %>
+          <mux-player
+            data-course-player
+            playback-id="<%= playableChapter.mux_playback_id %>"
+            metadata-video-title="<%= playableChapter.title %>"
+            accent-color="#0f6f85"
+          ></mux-player>
+        <% } else if (course.image) { %>
+          <img src="<%= course.image %>" alt="<%= course.title %>">
+        <% } else { %>
+          <div class="public-video-empty">
+            <strong>No video available yet.</strong>
+            <span>The course video will appear here after the chapter is published with a Mux playback ID.</span>
+          </div>
+        <% } %>
+      </div>
+    </section>
+
+    <section class="public-course-layout">
+      <div>
+        <section class="public-course-section">
+          <h2>About this course</h2>
+          <div class="course-description">
+            <%- course.description || '<p>Course description will appear here soon.</p>' %>
+          </div>
+        </section>
+      </div>
+
+      <div>
+        <section>
+        </section>
+      </div>
+
+    </section>
   </main>
 </div>
+
+<script src="/vendor/mux-player/mux-player.js"></script>
+<script>
+  document.querySelectorAll("[data-public-chapter]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const player = document.querySelector("[data-course-player]");
+      const playbackId = button.dataset.playbackId;
+
+      if (!player || !playbackId) return;
+
+      player.setAttribute("playback-id", playbackId);
+      player.setAttribute("metadata-video-title", button.dataset.chapterTitle || "Course chapter");
+
+      document.querySelectorAll("[data-public-chapter]").forEach((chapterButton) => {
+        const isActive = chapterButton === button;
+        chapterButton.classList.toggle("is-active", isActive);
+
+        const helperText = chapterButton.querySelector(".public-chapter-note");
+        if (helperText && chapterButton.dataset.playbackId) {
+          helperText.textContent = isActive ? "Now playing" : "Play chapter video";
+        }
+      });
+    });
+  });
+</script>
 
 <%- include('../partials/footer'); %>
