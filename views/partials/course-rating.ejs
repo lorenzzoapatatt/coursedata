@@ -1,0 +1,77 @@
+<%
+  const ratingData =
+    typeof courseRating !== "undefined" && courseRating
+      ? courseRating
+      : {
+          average: typeof ratingAverage !== "undefined" ? ratingAverage : "4.8",
+          count: 0,
+          chapterReviews: typeof chapterReviews !== "undefined" ? chapterReviews : [],
+          distribution: [72, 18, 7, 2, 1],
+        };
+  const ratingAverageValue = ratingData.average || "4.8";
+  const ratingDistribution = ratingData.distribution || [72, 18, 7, 2, 1];
+  const ratingChapterReviews = ratingData.chapterReviews || [];
+%>
+
+<div class="feedback-grid">
+  <section class="feedback-score">
+    <strong data-average-rating><%= ratingAverageValue %></strong>
+    <div class="review-stars" style="--rating: <%= Number(ratingAverageValue) * 20 %>%">
+      <span></span>
+    </div>
+    <small>Course rating</small>
+  </section>
+
+  <section class="feedback-bars" aria-label="Student feedback">
+    <% ratingDistribution.forEach((value, index) => { %>
+      <div>
+        <span><%= 5 - index %></span>
+        <div><span style="width: <%= value %>%"></span></div>
+        <strong><%= value %>%</strong>
+      </div>
+    <% }) %>
+  </section>
+</div>
+
+<section class="chapter-rating-card">
+  <div>
+    <span class="lesson-breadcrumb">Rating por chapter</span>
+    <h3>Avalie cada aula</h3>
+  </div>
+
+  <div class="chapter-review-list">
+    <% if (ratingChapterReviews.length) { %>
+      <% ratingChapterReviews.forEach((review, index) => { %>
+        <article
+          class="chapter-review-row"
+          data-review-row
+          data-chapter-id="<%= review.id %>"
+          data-base-rating="<%= review.rating %>"
+          data-base-count="<%= review.count %>"
+        >
+          <div class="chapter-review-main">
+            <span>Chapter <%= index + 1 %></span>
+            <strong><%= review.title %></strong>
+            <small data-review-summary><%= Number(review.rating || 0).toFixed(1) %> rating - <%= review.count %> reviews</small>
+          </div>
+          <div class="chapter-rating-control" data-rating-control>
+            <% [1, 2, 3, 4, 5].forEach((ratingValue) => { %>
+              <button
+                type="button"
+                data-rating-value="<%= ratingValue %>"
+                aria-label="<%= ratingValue %> stars"
+              >
+                <span aria-hidden="true">&#9733;</span>
+              </button>
+            <% }) %>
+          </div>
+        </article>
+      <% }) %>
+    <% } else { %>
+      <div class="lesson-empty-state">
+        <strong>Sem chapters para avaliar.</strong>
+        <span>Quando o curso tiver aulas publicadas, os ratings aparecem aqui.</span>
+      </div>
+    <% } %>
+  </div>
+</section>

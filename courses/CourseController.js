@@ -76,6 +76,31 @@ const getCourseSlug = (title) =>
     strict: true,
   });
 
+const getChapterRating = (index) => Number((4.9 - ((index % 4) * 0.18)).toFixed(1));
+
+const buildCourseRating = (chapters = []) => {
+  const chapterReviews = (chapters || []).map((chapter, index) => ({
+    id: chapter.id,
+    title: chapter.title,
+    rating: getChapterRating(index),
+    count: 12 + index * 3,
+  }));
+  const average = chapterReviews.length
+    ? (
+        chapterReviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) /
+        chapterReviews.length
+      ).toFixed(1)
+    : "4.8";
+  const count = chapterReviews.reduce((sum, review) => sum + Number(review.count || 0), 0);
+
+  return {
+    average,
+    count,
+    chapterReviews,
+    distribution: [72, 18, 7, 2, 1],
+  };
+};
+
 const getAttachmentId = (value, index, type) => {
   const safeId = normalizeText(value)
     .replace(/[^a-z0-9_-]/gi, "")
@@ -271,6 +296,7 @@ const decorateCourse = (course) => {
   const title = getCourseTitle(plain);
   const status = normalizeStatus(plain.status);
   const attachmentResources = parseCourseAttachments(plain.attachments);
+  const rating = buildCourseRating(plain.chapters || []);
 
   return {
     ...plain,
@@ -281,6 +307,8 @@ const decorateCourse = (course) => {
     status,
     description_text: stripHtml(plain.description),
     chapters_count: plain.chapters?.length || 0,
+    rating_average: rating.average,
+    rating_count: rating.count,
     attachment_resources: attachmentResources.map(decorateAttachmentResource),
     attachments_count: attachmentResources.length,
   };
@@ -491,6 +519,58 @@ const renderCoursesIndex = async (req, res) => {
   });
 };
 
+const renderCourseLearningPage = async (req, res, options = {}) => {
+  const { courseId, courseSlug, selectedChapterId } = options;
+  const courseWhere = { ...getDashboardCourseWhere(req) };
+
+  if (courseId) {
+    if (Number.isNaN(Number(courseId))) {
+      return res.status(404).send("Curso nao encontrado");
+    }
+
+    courseWhere.id = courseId;
+  } else if (courseSlug) {
+    if (Number.isNaN(Number(courseSlug))) {
+      courseWhere.slug = courseSlug;
+    } else {
+      courseWhere.id = courseSlug;
+    }
+  } else {
+    return res.status(404).send("Curso nao encontrado");
+  }
+
+  const course = await Course.findOne({ where: courseWhere });
+
+  if (!course) {
+    return res.status(404).send("Curso nao encontrado");
+  }
+
+  const chapters = await Chapter.findAll({
+    where: { course_id: course.id },
+    order: [
+      ["position", "ASC"],
+      ["id", "ASC"],
+    ],
+  });
+  const canPreviewDraft = canAccess(req.session?.user, PERMISSIONS.COURSE_PANEL);
+  const visibleChapters = canPreviewDraft
+    ? chapters
+    : chapters.filter((chapter) => normalizeStatus(chapter.status) === "published");
+  const requestedChapterId =
+    selectedChapterId || req.query.chapter || req.query.lecture || null;
+  const visibleSelectedChapter = visibleChapters.find(
+    (chapter) => Number(chapter.id) === Number(requestedChapterId),
+  );
+
+  return res.render("courses/show", {
+    course: decorateCourse(course),
+    chapters: visibleChapters,
+    courseRating: buildCourseRating(visibleChapters),
+    canPreviewDraft,
+    selectedChapterId: visibleSelectedChapter?.id || null,
+  });
+};
+
 router.get("/teacher/courses", coursePanelAuth, (req, res) => {
   renderCoursesIndex(req, res).catch((error) => {
     console.error(error);
@@ -590,48 +670,23 @@ router.get("/teacher/courses/:id/edit", coursePanelAuth, async (req, res) => {
 });
 
 router.get("/courses/:id", dashboardAuth, async (req, res) => {
-  const id = req.params.id;
-
-  if (Number.isNaN(Number(id))) {
-    return res.status(404).send("Curso nao encontrado");
-  }
-
-  try {
-    const courseWhere = {
-      ...getDashboardCourseWhere(req),
-      id,
-    };
-    const [course, chapters] = await Promise.all([
-      Course.findOne({ where: courseWhere }),
-      Chapter.findAll({
-        where: { course_id: id },
-        order: [
-          ["position", "ASC"],
-          ["id", "ASC"],
-        ],
-      }),
-    ]);
-
-    if (!course) {
-      return res.status(404).send("Curso nao encontrado");
-    }
-
-    const canPreviewDraft = canAccess(req.session?.user, PERMISSIONS.COURSE_PANEL);
-
-    const visibleChapters = canPreviewDraft
-      ? chapters
-      : chapters.filter((chapter) => normalizeStatus(chapter.status) === "published");
-
-    return res.render("courses/show", {
-      course: decorateCourse(course),
-      chapters: visibleChapters,
-      canPreviewDraft,
-      selectedChapterId: req.query.chapter || req.query.lecture || null,
-    });
-  } catch (error) {
+  renderCourseLearningPage(req, res, {
+    courseId: req.params.id,
+    selectedChapterId: req.query.chapter || req.query.lecture || null,
+  }).catch((error) => {
     console.error(error);
     return res.status(500).send("Erro ao carregar curso");
-  }
+  });
+});
+
+router.get("/course/:slug/learn/lecture/:chapterId", dashboardAuth, async (req, res) => {
+  renderCourseLearningPage(req, res, {
+    courseSlug: req.params.slug,
+    selectedChapterId: req.params.chapterId,
+  }).catch((error) => {
+    console.error(error);
+    return res.status(500).send("Erro ao carregar curso");
+  });
 });
 
 router.post("/teacher/courses/:id/update", coursePanelAuth, async (req, res) => {

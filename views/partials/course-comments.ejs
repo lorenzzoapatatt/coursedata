@@ -1,0 +1,97 @@
+<%
+  const commentChapters = typeof visibleChapters !== "undefined" ? visibleChapters : [];
+  const comments = typeof questionList !== "undefined" ? questionList : [];
+%>
+
+<form class="question-filter-bar" data-question-filter>
+  <label class="question-search">
+    <span class="visually-hidden">Search all course questions</span>
+    <input
+      type="search"
+      placeholder="Search all course questions"
+      data-question-search
+    >
+  </label>
+  <label>
+    <span>Filters:</span>
+    <select data-question-chapter>
+      <option value="all">All lectures</option>
+      <% commentChapters.forEach((chapter, index) => { %>
+        <option value="<%= chapter.id %>">Lecture <%= index + 1 %></option>
+      <% }) %>
+    </select>
+  </label>
+  <label>
+    <span>Sort by:</span>
+    <select data-question-sort>
+      <option value="recommended">Sort by recommended</option>
+      <option value="most-liked">Most liked</option>
+      <option value="newest">Newest</option>
+    </select>
+  </label>
+  <button class="question-filter-button" type="submit">Filter questions</button>
+</form>
+
+<form class="question-composer" data-comment-form>
+  <div class="question-composer-head">
+    <strong>Comentar algo</strong>
+    <select name="chapterId" aria-label="Selecionar aula">
+      <% commentChapters.forEach((chapter, index) => { %>
+        <option
+          value="<%= chapter.id %>"
+          <%= selectedChapter && Number(chapter.id) === Number(selectedChapter.id) ? "selected" : "" %>
+        >
+          Lecture <%= index + 1 %>
+        </option>
+      <% }) %>
+      <% if (!commentChapters.length) { %>
+        <option value="all">Course</option>
+      <% } %>
+    </select>
+  </div>
+  <input name="title" type="text" placeholder="Titulo da pergunta" required maxlength="120">
+  <textarea name="body" rows="4" placeholder="Escreva seu comentario ou duvida" required maxlength="700"></textarea>
+  <button type="submit">Publicar comentario</button>
+</form>
+
+<div class="featured-questions-head">
+  <h3>Featured questions in this course</h3>
+  <span>(<span data-visible-questions-count><%= comments.length %></span>)</span>
+</div>
+
+<div class="question-list" data-question-list>
+  <% comments.forEach((question, index) => { %>
+    <article
+      class="question-card"
+      data-question-card
+      data-question-id="<%= question.id %>"
+      data-chapter-id="<%= question.chapterId %>"
+      data-question-text="<%= `${question.title} ${question.body} ${question.author}`.toLowerCase() %>"
+      data-score="<%= question.likes %>"
+      data-created="<%= comments.length - index %>"
+    >
+      <div class="question-avatar"><%= question.initials %></div>
+      <div class="question-body">
+        <h4><%= question.title %></h4>
+        <p><%= question.body %></p>
+        <small>
+          <%= question.author %>
+          <span>Lecture <%= question.lecture %></span>
+          <span><%= question.age %></span>
+        </small>
+      </div>
+      <div class="question-stats">
+        <button type="button" data-like-button aria-label="Dar like">
+          <span data-like-count><%= question.likes %></span>
+          <span aria-hidden="true">+</span>
+        </button>
+        <span><%= question.replies %> replies</span>
+      </div>
+    </article>
+  <% }) %>
+</div>
+
+<div class="lesson-empty-state course-player-hidden" data-question-empty>
+  <strong>Nenhuma pergunta encontrada.</strong>
+  <span>Tente outro filtro ou publique um novo comentario.</span>
+</div>

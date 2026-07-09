@@ -69,6 +69,13 @@
               <%= Number(course.chapters_count) === 1 ? 'Chapter' : 'Chapters' %>
             </span>
           </div>
+          <div class="dashboard-course-rating" aria-label="Average course rating">
+            <span class="dashboard-course-stars" style="--rating: <%= Number(course.rating_average || 0) * 20 %>%">
+              <span></span>
+            </span>
+            <strong><%= course.rating_average || '4.8' %></strong>
+            <small><%= Number(course.rating_count || 0) %> ratings</small>
+          </div>
           <strong>
             <% if (Number(course.price || 0) > 0) { %>
               $<%= Number(course.price || 0).toFixed(2) %>

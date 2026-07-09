@@ -1,86 +1,570 @@
 <%- include('../partials/header'); %>
 
-<div class="public-course-shell">
-  <%- include('../partials/navbar'); %>
+<%
+  const visibleChapters = chapters || [];
+  const selectedChapterIdValue =
+    typeof selectedChapterId !== "undefined" ? selectedChapterId : null;
+  const selectedChapter =
+    visibleChapters.find((chapter) => Number(chapter.id) === Number(selectedChapterIdValue)) ||
+    visibleChapters.find((chapter) => Number(chapter.id) === Number(course.chapter_id)) ||
+    visibleChapters.find((chapter) => chapter.mux_playback_id) ||
+    visibleChapters[0] ||
+    null;
+  const selectedChapterIndex = selectedChapter
+    ? Math.max(
+        0,
+        visibleChapters.findIndex((chapter) => Number(chapter.id) === Number(selectedChapter.id)),
+      )
+    : -1;
+  const initialProgress = visibleChapters.length
+    ? Math.round(((selectedChapterIndex + 1) / visibleChapters.length) * 100)
+    : 0;
+  const totalDurationSeconds = visibleChapters.reduce(
+    (sum, chapter) => sum + Number(chapter.duration_seconds || 0),
+    0,
+  );
+  const formatLessonDuration = (seconds) => {
+    const totalSeconds = Number(seconds || 0);
+    if (!totalSeconds) return "No duration";
 
-  <main class="container app-content">
-    <%
-      const visibleChapters = chapters || [];
-      const selectedChapter =
-        visibleChapters.find((chapter) => Number(chapter.id) === Number(course.chapter_id)) ||
-        visibleChapters.find((chapter) => chapter.mux_playback_id) ||
-        visibleChapters[0] ||
-        null;
-      const playableChapter =
-        selectedChapter?.mux_playback_id
-          ? selectedChapter
-          : visibleChapters.find((chapter) => chapter.mux_playback_id) || null;
-    %>
+    const minutes = Math.floor(totalSeconds / 60);
+    if (minutes < 60) return `${minutes} min`;
 
-    <section class="public-course-hero">
-      
+    const hours = Math.floor(minutes / 60);
+    const restMinutes = minutes % 60;
+    return restMinutes ? `${hours}h ${restMinutes}m` : `${hours}h`;
+  };
+  const ratingAverage =
+    (typeof courseRating !== "undefined" && courseRating?.average) ||
+    course.rating_average ||
+    "4.8";
+  const seedQuestions = visibleChapters.slice(0, 4).map((chapter, index) => ({
+    id: `chapter-${chapter.id}-question-${index + 1}`,
+    chapterId: chapter.id,
+    lecture: index + 1,
+    author: ["Luis", "Pedro", "Ismael", "Marina"][index % 4],
+    initials: ["LD", "PV", "IS", "MA"][index % 4],
+    title: [
+      "Como importar os plugins do TinyMCE no projeto?",
+      "Dica: executando SELECT +1 AS result",
+      "Resolucao do problema: Component name should always be multi-word",
+      "Como organizar os arquivos deste chapter?",
+    ][index % 4],
+    body: [
+      "Estou tentando acompanhar a aula e queria confirmar a melhor forma de importar os plugins.",
+      "Pode ser que no terminal apareca uma mensagem diferente dependendo da versao instalada.",
+      "Ao criar o componente, apareceu a validacao de nome. Qual padrao devemos usar no curso?",
+      "Fiquei com duvida sobre a estrutura recomendada para continuar as proximas aulas.",
+    ][index % 4],
+    likes: [90, 78, 37, 24][index % 4],
+    replies: [11, 7, 12, 3][index % 4],
+    age: ["4 years ago", "6 years ago", "4 years ago", "2 years ago"][index % 4],
+  }));
+  const questionList = seedQuestions.length
+    ? seedQuestions
+    : [
+        {
+          id: "course-question-empty",
+          chapterId: "all",
+          lecture: 1,
+          author: "CourseData",
+          initials: "CD",
+          title: "Deixe sua primeira pergunta sobre este curso",
+          body: "As discussoes do curso aparecem aqui quando os alunos comentam.",
+          likes: 0,
+          replies: 0,
+          age: "now",
+        },
+      ];
+  const currentUserName = typeof user !== "undefined" && user ? user.name : "You";
+  const currentUserInitials = currentUserName
+    .split(" ")
+    .map((part) => part.charAt(0))
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "ME";
+  const safeJson = (value) => JSON.stringify(value).replace(/</g, "\\u003c");
+%>
 
-      <div class="public-course-media">
-        <% if (playableChapter) { %>
-          <mux-player
-            data-course-player
-            playback-id="<%= playableChapter.mux_playback_id %>"
-            metadata-video-title="<%= playableChapter.title %>"
-            accent-color="#0f6f85"
-          ></mux-player>
-        <% } else if (course.image) { %>
-          <img src="<%= course.image %>" alt="<%= course.title %>">
-        <% } else { %>
-          <div class="public-video-empty">
-            <strong>No video available yet.</strong>
-            <span>The course video will appear here after the chapter is published with a Mux playback ID.</span>
-          </div>
-        <% } %>
+<div class="lesson-course-page" data-lesson-page data-course-id="<%= course.id %>">
+  <header class="lesson-topbar">
+    <a class="lesson-exit-link" href="/dashboard">&larr; Sair da aula</a>
+
+    <div class="lesson-title-block">
+      <span>Curso</span>
+      <h1 title="<%= course.title %>"><%= course.title %></h1>
+    </div>
+
+    <div class="lesson-progress" aria-label="Progresso do curso">
+      <strong data-progress-label>Progresso <%= initialProgress %>%</strong>
+      <div class="lesson-progress-track" aria-hidden="true">
+        <span data-progress-bar style="width: <%= initialProgress %>%"></span>
       </div>
-    </section>
+    </div>
+  </header>
 
-    <section class="public-course-layout">
-      <div>
-        <section class="public-course-section">
-          <h2>About this course</h2>
-          <div class="course-description">
-            <%- course.description || '<p>Course description will appear here soon.</p>' %>
-          </div>
-        </section>
-      </div>
+  <div class="lesson-shell">
+    <main class="lesson-main">
+      <section class="lesson-player-panel" aria-label="Video da aula">
+        <div class="lesson-player-frame" data-player-frame>
+          <% if (selectedChapter && selectedChapter.mux_playback_id) { %>
+            <mux-player
+              data-course-player
+              playback-id="<%= selectedChapter.mux_playback_id %>"
+              metadata-video-title="<%= selectedChapter.title %>"
+              accent-color="#0f6f85"
+            ></mux-player>
+          <% } else if (course.image) { %>
+            <img src="<%= course.image %>" alt="<%= course.title %>">
+          <% } else { %>
+            <div class="lesson-video-empty">
+              <div>
+                <strong>Video indisponivel</strong>
+                <span>Esta aula ainda nao tem um video publicado.</span>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      </section>
 
-      <div>
-        <section>
-        </section>
-      </div>
+      <section class="lesson-content-head">
+        <div>
+          <span class="lesson-breadcrumb">Overview / Comments / Review</span>
+          <h2 data-current-chapter-title>
+            <%= selectedChapter ? selectedChapter.title : course.title %>
+          </h2>
+        </div>
+        <div class="lesson-current-meta">
+          <span class="lesson-chip" data-current-chapter-number>
+            Aula <%= selectedChapterIndex + 1 > 0 ? selectedChapterIndex + 1 : 0 %>/<%= visibleChapters.length %>
+          </span>
+          <span class="lesson-chip"><%= course.category || "General" %></span>
+        </div>
+      </section>
 
-    </section>
-  </main>
+      <nav class="lesson-tabs" aria-label="Course details">
+        <button
+          class="lesson-tab is-active"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          data-lesson-tab="overview"
+        >
+          Overview
+        </button>
+        <button
+          class="lesson-tab"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          data-lesson-tab="comments"
+        >
+          Comments
+          <span class="lesson-tab-count" data-comments-count><%= questionList.length %></span>
+        </button>
+        <button
+          class="lesson-tab"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          data-lesson-tab="review"
+        >
+          Review
+          <span class="lesson-tab-count"><%= ratingAverage %></span>
+        </button>
+      </nav>
+
+      <section class="lesson-tab-panel is-active" data-lesson-panel="overview">
+        <%- include('../partials/course-overview', {
+          course,
+          selectedChapter,
+          visibleChapters,
+          totalDurationSeconds,
+          formatLessonDuration,
+          ratingAverage,
+        }); %>
+      </section>
+
+      <section class="lesson-tab-panel" data-lesson-panel="comments">
+        <%- include('../partials/course-comments', {
+          visibleChapters,
+          selectedChapter,
+          questionList,
+        }); %>
+      </section>
+
+      <section class="lesson-tab-panel" data-lesson-panel="review">
+        <%- include('../partials/course-rating', {
+          courseRating: typeof courseRating !== "undefined" ? courseRating : null,
+        }); %>
+      </section>
+    </main>
+
+    <%- include('../partials/sidebarcourse', {
+      visibleChapters: visibleChapters,
+      selectedChapter: selectedChapter,
+      canPreviewDraft: canPreviewDraft,
+    }); %>
+  </div>
 </div>
 
 <script src="/vendor/mux-player/mux-player.js"></script>
 <script>
-  document.querySelectorAll("[data-public-chapter]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const player = document.querySelector("[data-course-player]");
-      const playbackId = button.dataset.playbackId;
+  (() => {
+    const courseId = "<%= course.id %>";
+    const courseLearnBase = <%- safeJson(`/course/${course.slug || course.id}/learn/lecture`) %>;
+    const storageKey = `course:${courseId}:lesson-state`;
+    const questionsKey = `course:${courseId}:questions`;
+    const page = document.querySelector("[data-lesson-page]");
+    const playerFrame = document.querySelector("[data-player-frame]");
+    const questionList = document.querySelector("[data-question-list]");
+    const questionEmpty = document.querySelector("[data-question-empty]");
+    const currentUser = {
+      name: <%- safeJson(currentUserName) %>,
+      initials: <%- safeJson(currentUserInitials) %>,
+    };
+    const chapters = <%- safeJson(visibleChapters.map((chapter, index) => ({
+      id: String(chapter.id),
+      title: chapter.title,
+      playbackId: chapter.mux_playback_id || "",
+      progress: visibleChapters.length ? Math.round(((index + 1) / visibleChapters.length) * 100) : 0,
+      index: index + 1,
+      total: visibleChapters.length,
+      hasVideo: Boolean(chapter.mux_playback_id),
+    }))) %>;
 
-      if (!player || !playbackId) return;
+    const loadState = () => {
+      try {
+        return JSON.parse(localStorage.getItem(storageKey)) || {};
+      } catch (error) {
+        return {};
+      }
+    };
 
-      player.setAttribute("playback-id", playbackId);
-      player.setAttribute("metadata-video-title", button.dataset.chapterTitle || "Course chapter");
+    const saveState = (state) => {
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    };
+
+    const state = loadState();
+    state.likedQuestions = state.likedQuestions || {};
+    state.chapterRatings = state.chapterRatings || {};
+
+    const getChapter = (id) => chapters.find((chapter) => chapter.id === String(id));
+
+    const renderEmptyVideo = (message) => {
+      playerFrame.innerHTML = "";
+      const empty = document.createElement("div");
+      const wrapper = document.createElement("div");
+      const strong = document.createElement("strong");
+      const span = document.createElement("span");
+
+      empty.className = "lesson-video-empty";
+      strong.textContent = "Video indisponivel";
+      span.textContent = message || "Esta aula ainda nao tem um video publicado.";
+
+      wrapper.append(strong, span);
+      empty.append(wrapper);
+      playerFrame.append(empty);
+    };
+
+    const renderPlayer = (chapter) => {
+      if (!chapter) return;
+
+      if (!chapter.playbackId) {
+        renderEmptyVideo();
+        return;
+      }
+
+      let player = playerFrame.querySelector("[data-course-player]");
+
+      if (!player) {
+        playerFrame.innerHTML = "";
+        player = document.createElement("mux-player");
+        player.setAttribute("data-course-player", "");
+        player.setAttribute("accent-color", "#0f6f85");
+        playerFrame.append(player);
+      }
+
+      player.setAttribute("playback-id", chapter.playbackId);
+      player.setAttribute("metadata-video-title", chapter.title || "Course chapter");
+    };
+
+    const updateProgress = (chapter) => {
+      const progress = chapter ? chapter.progress : 0;
+      const progressLabel = document.querySelector("[data-progress-label]");
+      const progressBar = document.querySelector("[data-progress-bar]");
+      const currentNumber = document.querySelector("[data-current-chapter-number]");
+
+      if (progressLabel) progressLabel.textContent = `Progresso ${progress}%`;
+      if (progressBar) progressBar.style.width = `${progress}%`;
+      if (currentNumber && chapter) {
+        currentNumber.textContent = `Aula ${chapter.index}/${chapter.total}`;
+      }
+    };
+
+    const updateChapterText = (chapter) => {
+      if (!chapter) return;
+
+      const title = document.querySelector("[data-current-chapter-title]");
+      const description = document.querySelector("[data-lesson-description]");
+      const template = document.querySelector(`[data-chapter-description-template="${chapter.id}"]`);
+
+      if (title) title.textContent = chapter.title;
+      if (description && template) description.innerHTML = template.innerHTML;
+    };
+
+    const activateChapter = (button) => {
+      const chapter = getChapter(button.dataset.chapterId);
+      if (!chapter) return;
 
       document.querySelectorAll("[data-public-chapter]").forEach((chapterButton) => {
-        const isActive = chapterButton === button;
-        chapterButton.classList.toggle("is-active", isActive);
+        chapterButton.classList.toggle("is-active", chapterButton === button);
+      });
 
-        const helperText = chapterButton.querySelector(".public-chapter-note");
-        if (helperText && chapterButton.dataset.playbackId) {
-          helperText.textContent = isActive ? "Now playing" : "Play chapter video";
-        }
+      renderPlayer(chapter);
+      updateProgress(chapter);
+      updateChapterText(chapter);
+
+      window.history.replaceState({}, "", `${courseLearnBase}/${encodeURIComponent(chapter.id)}`);
+    };
+
+    document.querySelectorAll("[data-public-chapter]").forEach((button) => {
+      button.addEventListener("click", () => activateChapter(button));
+    });
+
+    document.querySelectorAll("[data-lesson-tab]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const target = button.dataset.lessonTab;
+
+        document.querySelectorAll("[data-lesson-tab]").forEach((tab) => {
+          const isActive = tab === button;
+          tab.classList.toggle("is-active", isActive);
+          tab.setAttribute("aria-selected", isActive ? "true" : "false");
+        });
+
+        document.querySelectorAll("[data-lesson-panel]").forEach((panel) => {
+          panel.classList.toggle("is-active", panel.dataset.lessonPanel === target);
+        });
       });
     });
-  });
+
+    const updateQuestionCounts = () => {
+      const visibleCards = [...document.querySelectorAll("[data-question-card]")].filter(
+        (card) => !card.hidden,
+      );
+      const visibleCount = document.querySelector("[data-visible-questions-count]");
+      const tabCount = document.querySelector("[data-comments-count]");
+
+      if (visibleCount) visibleCount.textContent = visibleCards.length;
+      if (tabCount) tabCount.textContent = document.querySelectorAll("[data-question-card]").length;
+      if (questionEmpty) questionEmpty.classList.toggle("course-player-hidden", visibleCards.length > 0);
+    };
+
+    const sortQuestions = (sortMode) => {
+      const cards = [...document.querySelectorAll("[data-question-card]")];
+      const sorted = cards.sort((a, b) => {
+        if (sortMode === "newest") {
+          return Number(b.dataset.created || 0) - Number(a.dataset.created || 0);
+        }
+
+        return Number(b.dataset.score || 0) - Number(a.dataset.score || 0);
+      });
+
+      sorted.forEach((card) => questionList.append(card));
+    };
+
+    const filterQuestions = () => {
+      const query = document.querySelector("[data-question-search]")?.value.trim().toLowerCase() || "";
+      const chapterId = document.querySelector("[data-question-chapter]")?.value || "all";
+      const sortMode = document.querySelector("[data-question-sort]")?.value || "recommended";
+
+      sortQuestions(sortMode);
+
+      document.querySelectorAll("[data-question-card]").forEach((card) => {
+        const matchesQuery = !query || card.dataset.questionText.includes(query);
+        const matchesChapter = chapterId === "all" || card.dataset.chapterId === chapterId;
+        card.hidden = !(matchesQuery && matchesChapter);
+      });
+
+      updateQuestionCounts();
+    };
+
+    document.querySelector("[data-question-filter]")?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      filterQuestions();
+    });
+
+    document.querySelector("[data-question-search]")?.addEventListener("input", filterQuestions);
+    document.querySelector("[data-question-chapter]")?.addEventListener("change", filterQuestions);
+    document.querySelector("[data-question-sort]")?.addEventListener("change", filterQuestions);
+
+    const attachLikeHandler = (button) => {
+      const card = button.closest("[data-question-card]");
+      const count = button.querySelector("[data-like-count]");
+      if (!card || !count) return;
+
+      const likedQuestions = state.likedQuestions;
+      const isLiked = Boolean(likedQuestions[card.dataset.questionId]);
+
+      button.classList.toggle("is-liked", isLiked);
+      button.addEventListener("click", () => {
+        const nextLiked = !likedQuestions[card.dataset.questionId];
+        likedQuestions[card.dataset.questionId] = nextLiked;
+
+        const nextCount = Number(count.textContent || 0) + (nextLiked ? 1 : -1);
+        count.textContent = Math.max(0, nextCount);
+        card.dataset.score = count.textContent;
+        button.classList.toggle("is-liked", nextLiked);
+
+        state.likedQuestions = likedQuestions;
+        saveState(state);
+        filterQuestions();
+      });
+    };
+
+    const createQuestionCard = (question) => {
+      const card = document.createElement("article");
+      const avatar = document.createElement("div");
+      const body = document.createElement("div");
+      const title = document.createElement("h4");
+      const text = document.createElement("p");
+      const meta = document.createElement("small");
+      const lecture = document.createElement("span");
+      const age = document.createElement("span");
+      const stats = document.createElement("div");
+      const likeButton = document.createElement("button");
+      const likeCount = document.createElement("span");
+      const plus = document.createElement("span");
+      const replies = document.createElement("span");
+
+      card.className = "question-card";
+      card.dataset.questionCard = "";
+      card.dataset.questionId = question.id;
+      card.dataset.chapterId = question.chapterId;
+      card.dataset.questionText = `${question.title} ${question.body} ${question.author}`.toLowerCase();
+      card.dataset.score = String(question.likes || 0);
+      card.dataset.created = String(Date.now());
+
+      avatar.className = "question-avatar";
+      avatar.textContent = question.initials;
+
+      body.className = "question-body";
+      title.textContent = question.title;
+      text.textContent = question.body;
+      meta.append(question.author);
+      lecture.textContent = question.lecture;
+      age.textContent = "now";
+      meta.append(lecture, age);
+      body.append(title, text, meta);
+
+      stats.className = "question-stats";
+      likeButton.type = "button";
+      likeButton.dataset.likeButton = "";
+      likeButton.setAttribute("aria-label", "Dar like");
+      likeCount.dataset.likeCount = "";
+      likeCount.textContent = String(question.likes || 0);
+      plus.setAttribute("aria-hidden", "true");
+      plus.textContent = "+";
+      likeButton.append(likeCount, plus);
+      replies.textContent = "0 replies";
+      stats.append(likeButton, replies);
+
+      card.append(avatar, body, stats);
+      attachLikeHandler(likeButton);
+
+      return card;
+    };
+
+    const loadCustomQuestions = () => {
+      try {
+        return JSON.parse(localStorage.getItem(questionsKey)) || [];
+      } catch (error) {
+        return [];
+      }
+    };
+
+    const customQuestions = loadCustomQuestions();
+    customQuestions.forEach((question) => {
+      questionList?.prepend(createQuestionCard(question));
+    });
+
+    document.querySelector("[data-comment-form]")?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const formData = new FormData(form);
+      const chapterId = String(formData.get("chapterId") || "all");
+      const chapter = getChapter(chapterId);
+      const question = {
+        id: `custom-${Date.now()}`,
+        chapterId,
+        lecture: chapter ? `Lecture ${chapter.index}` : "Course",
+        author: currentUser.name,
+        initials: currentUser.initials,
+        title: String(formData.get("title") || "").trim(),
+        body: String(formData.get("body") || "").trim(),
+        likes: 0,
+      };
+
+      if (!question.title || !question.body) return;
+
+      customQuestions.unshift(question);
+      localStorage.setItem(questionsKey, JSON.stringify(customQuestions.slice(0, 30)));
+      questionList?.prepend(createQuestionCard(question));
+      form.reset();
+      filterQuestions();
+    });
+
+    document.querySelectorAll("[data-like-button]").forEach(attachLikeHandler);
+
+    const paintRatingControl = (control, value) => {
+      control.querySelectorAll("[data-rating-value]").forEach((button) => {
+        button.classList.toggle("is-selected", Number(button.dataset.ratingValue) <= value);
+      });
+    };
+
+    const updateReviewRow = (row, value) => {
+      const summary = row.querySelector("[data-review-summary]");
+      const count = Number(row.dataset.baseCount || 0) + (value ? 1 : 0);
+      const rating = value || Number(row.dataset.baseRating || 0);
+
+      if (summary) {
+        summary.textContent = `${rating.toFixed(1)} rating - ${count} reviews`;
+      }
+    };
+
+    document.querySelectorAll("[data-review-row]").forEach((row) => {
+      const control = row.querySelector("[data-rating-control]");
+      const savedRating = Number(state.chapterRatings?.[row.dataset.chapterId] || 0);
+      const baseRating = Math.round(Number(row.dataset.baseRating || 0));
+
+      if (control) paintRatingControl(control, savedRating || baseRating);
+      if (savedRating) updateReviewRow(row, savedRating);
+
+      control?.querySelectorAll("[data-rating-value]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const rating = Number(button.dataset.ratingValue || 0);
+
+          state.chapterRatings[row.dataset.chapterId] = rating;
+          saveState(state);
+
+          paintRatingControl(control, rating);
+          updateReviewRow(row, rating);
+        });
+      });
+    });
+
+    document.querySelector("[data-sidebar-toggle]")?.addEventListener("click", () => {
+      page?.classList.add("is-sidebar-collapsed");
+      document.querySelector("[data-sidebar-restore]")?.classList.remove("course-player-hidden");
+    });
+
+    document.querySelector("[data-sidebar-restore]")?.addEventListener("click", () => {
+      page?.classList.remove("is-sidebar-collapsed");
+      document.querySelector("[data-sidebar-restore]")?.classList.add("course-player-hidden");
+    });
+
+    filterQuestions();
+  })();
 </script>
 
 <%- include('../partials/footer'); %>

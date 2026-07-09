@@ -1,0 +1,55 @@
+<%
+  const overviewChapters = typeof visibleChapters !== "undefined" ? visibleChapters : [];
+  const overviewDuration = typeof totalDurationSeconds !== "undefined" ? totalDurationSeconds : 0;
+  const overviewRating = typeof ratingAverage !== "undefined" ? ratingAverage : "4.8";
+  const overviewFormatDuration =
+    typeof formatLessonDuration !== "undefined"
+      ? formatLessonDuration
+      : (seconds) => `${Math.floor(Number(seconds || 0) / 60)} min`;
+%>
+
+<div class="lesson-description" data-lesson-description>
+  <%- selectedChapter?.description || course.description || "<p>Course description will appear here soon.</p>" %>
+</div>
+
+<div class="lesson-facts">
+  <div>
+    <span>Rating</span>
+    <strong><%= overviewRating %> / 5</strong>
+  </div>
+  <div>
+    <span>Capitulos</span>
+    <strong><%= overviewChapters.length %></strong>
+  </div>
+  <div>
+    <span>Tempo total</span>
+    <strong><%= overviewDuration ? overviewFormatDuration(overviewDuration) : `${course.workload_hours || 0}h` %></strong>
+  </div>
+</div>
+
+<% if (course.attachment_resources && course.attachment_resources.length) { %>
+  <section class="lesson-resources">
+    <h3>Resources</h3>
+    <div class="lesson-resource-list">
+      <% course.attachment_resources.forEach((resource) => { %>
+        <% if (resource.type === "link" || resource.type === "file") { %>
+          <a class="lesson-resource-link" href="<%= resource.url %>" target="_blank" rel="noreferrer">
+            <span><%= resource.label %></span>
+            <strong><%= resource.title %></strong>
+            <% if (resource.meta) { %>
+              <small><%= resource.meta %></small>
+            <% } %>
+          </a>
+        <% } else { %>
+          <div class="lesson-resource-link">
+            <span><%= resource.label %></span>
+            <strong><%= resource.title %></strong>
+            <% if (resource.text) { %>
+              <small><%= resource.text %></small>
+            <% } %>
+          </div>
+        <% } %>
+      <% }) %>
+    </div>
+  </section>
+<% } %>
